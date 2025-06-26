@@ -1,0 +1,788 @@
+function actualizarMonto() {
+    const valorVehiculo = parseFloat(document.getElementById('valor').value);
+    const entrada = parseFloat(document.getElementById('entrada').value);
+    const montoNum = valorVehiculo - entrada;
+    document.getElementById('monto').value = montoNum.toFixed(2);
+  }
+
+document.getElementById('calcularBtn').addEventListener('click', function () {
+     actualizarMonto();
+    // Obtener los valores de los campos
+    const marca = document.getElementById('marca').value;
+    const modelo = document.getElementById('modelo').value;
+    const valorVehiculo = document.getElementById('valor').value;
+    const entrada = document.getElementById('entrada').value;
+    const ingresoDeudor = document.getElementById('ingresoDeudor').value;
+    const plazo = document.getElementById('plazo').value;
+    const ingresoConyuge = document.getElementById('ingresoConyuge').value || 0;
+    const cedulaDeudor = document.getElementById('cedulaDeudor').value;
+    const otrosIngresos = document.getElementById('otrosIngresos').value || 0;
+    const estadocivil = document.getElementById('estado_civil').value;
+    const cedulaConyuge = document.getElementById('cedulaConyuge').value;
+    const hijos = document.getElementById('numerohijos').value || 0;
+    const activos = document.getElementById('Activos').value || 0;
+    const separacionBienes = document.querySelector('input[name="separacion"]:checked')?.value;
+    const terminosAceptados = document.getElementById('terminos').checked;
+    const regexCedula = /^\d{10}$/;
+
+    // Convertir los valores a números
+    const montoNum = parseFloat(valorVehiculo - entrada);
+    const ingresoDeudorNum = parseFloat(ingresoDeudor);
+    const plazoNum = parseInt(plazo);
+    const ingresoConyugeNum = parseFloat(ingresoConyuge) || 0;
+    const otrosIngresosNum = parseFloat(otrosIngresos) || 0;
+    const numeroHijos = Math.trunc(parseFloat(hijos)) || 0;
+    const activosNum = parseFloat(activos) || 0;
+
+    // Validar que todos los campos estén llenos
+    if (!valor) {
+        window.alert("El campo 'Valor Vehículo' es obligatorio.");
+        return;
+    }
+    if (!plazo) {
+        window.alert("El campo 'Plazo' es obligatorio.");
+        return;
+    }
+    if (!cedulaDeudor) {
+        window.alert("El campo 'Cédula del Deudor' es obligatorio.");
+        return;
+    }
+    if (!estadocivil) {
+        window.alert("El campo 'Estado Civil' es obligatorio.");
+        return;
+    }
+    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes) {
+      window.alert("El campo 'Separación de Bienes' es obligatorio.");
+      return;
+    }
+    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !cedulaConyuge) {
+        window.alert("El campo 'Cédula del Cónyuge' es obligatorio para el estado civil seleccionado.");
+        return;
+    }
+    if (!ingresoDeudor) {
+        window.alert("El campo 'Ingreso del Deudor' es obligatorio.");
+        return;
+    }
+    if (!hijos) {
+        window.alert("El campo 'Número de hijos' es obligatorio.");
+        return;
+    }
+    if (!terminosAceptados) {
+        window.alert("Debe aceptar los términos y condiciones para continuar.");
+        return;
+    }
+    // Validar que el monto no esté vacío y sea mayor que 0
+    if (isNaN(montoNum) || montoNum <= 0) {
+        window.alert("El campo 'Monto' no puede estar vacío y debe ser mayor que 0.");
+        return;
+    }
+    // Validar que la cédula del deudor tenga 10 dígitos
+    if (!regexCedula.test(cedulaDeudor)) {
+        window.alert("La cédula del deudor debe tener exactamente 10 dígitos.");
+        return;
+    }
+    // Validar que la cédula del cónyuge tenga 10 dígitos si es requerida
+    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !regexCedula.test(cedulaConyuge)) {
+        window.alert("La cédula del cónyuge debe tener exactamente 10 dígitos.");
+        return;
+    }
+    // Validar que el ingreso del deudor no sea negativo
+    if (ingresoDeudorNum <= 0) {
+        window.alert("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
+        return;
+    }
+    // Validar que el ingreso del cónyuge no sea negativo
+    if (ingresoConyugeNum < 0) {
+        window.alert("El ingreso del cónyuge no puede ser negativo.");
+        return;
+    }
+    // Validar que otros ingresos no sean negativos
+    if (otrosIngresosNum < 0) {
+        window.alert("Los otros ingresos no pueden ser negativos.");
+        return;
+    }
+    // Validar que hijos no sean negativos
+    if (numeroHijos < 0) {
+        window.alert("Los hijos no pueden ser negativos.");
+        return;
+    }
+
+    //Variables usadas en API y posterior
+    let identificacionSujeto;
+    let nombreRazonSocial;
+    let identificacionConyuge;
+    let nombresConyuge;
+    let score;
+    let scoreConyuge;
+    let ctaCorrientes;
+    let deudaVigenteTotal;
+    let cuotaTotal;
+    let valorDemandaJudicial;
+    let valorCarteraCastigada;
+    let deudaVigenteConyuge = 0;
+    let cuotaTotalConyuge = 0;
+    let numOpActuales; 
+    let mesesSinVencimientos;
+    let carteraCastigada;
+    let demandaJudicial;
+    let numOpActualesConyuge;
+    let mesesSinVencimientosConyuge;
+    let carteraCastigadaConyuge;
+    let demandaJudicialConyuge;
+
+
+    // Crear un array de promesas para las solicitudes fetch
+    const fetchPromises = [];
+
+    //Función para llamar API
+    fetchPromises.push(
+        fetch('https://calcbackend.onrender.com/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+                     'Authorization': 'Bearer ' + localStorage.getItem('token')
+           },
+          body: JSON.stringify({
+            "origin": "webservice",
+            "request": {
+              "codigoProducto": "T453",
+              "datosEntrada": [
+                {
+                  "clave": "tipoIdentificacionSujeto",
+                  "valor": "C"
+                },
+                {
+                  "clave": "identificacionSujeto",
+                  "valor": cedulaDeudor
+                }
+              ]
+            }
+          })
+        })
+      );
+         
+      // Si existe cédula del cónyuge, agregamos otra solicitud fetch para el cónyuge
+      if (cedulaConyuge) {
+        fetchPromises.push(
+          fetch('https://calcbackend.onrender.com/proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json',
+                       'Authorization': 'Bearer ' + localStorage.getItem('token')
+             },
+            body: JSON.stringify({
+              "origin": "webservice",
+              "request": {
+                "codigoProducto": "T453",
+                "datosEntrada": [
+                  {
+                  "clave": "tipoIdentificacionSujeto",
+                  "valor": "C"
+                  },
+                  {
+                  "clave": "identificacionSujeto",
+                  "valor": cedulaConyuge
+                  }
+                ]
+              }
+            })
+          })
+        );
+      }
+     
+      // Ejecutar todas las solicitudes en paralelo
+      Promise.all(fetchPromises)
+        .then(responses => Promise.all(responses.map(res => res.json())))
+        .then(jsons => {
+        const [deudorData, conyugeData, datosDbook] = jsons;
+
+        console.log(deudorData);
+        console.log(conyugeData);
+        
+        // Procesar datos del deudor principal
+        if (deudorData.result && deudorData.result.identificacionTitular && deudorData.result.identificacionTitular.length > 0) {
+            identificacionSujeto = deudorData.result.identificacionTitular[0].identificacionSujeto;
+            nombreRazonSocial = deudorData.result.identificacionTitular[0].nombreRazonSocial;
+            console.log("Cédula deudor:", identificacionSujeto);
+            console.log("Nombres deudor:", nombreRazonSocial);
+        }
+        if(deudorData.result && deudorData.result.scoreFinanciero && deudorData.result.scoreFinanciero.length > 0){
+            score = parseInt(deudorData.result.scoreFinanciero[0].score);
+            console.log("Score Deudor",score);
+        }
+        if(deudorData.result && deudorData.result.factoresScore && deudorData.result.factoresScore.length > 0){
+          numOpActuales = parseInt(deudorData.result.factoresScore[0].valor);
+          mesesSinVencimientos = parseInt(deudorData.result.factoresScore[2].valor);
+          carteraCastigada = parseFloat(deudorData.result.factoresScore[9].valor);
+          demandaJudicial= parseFloat(deudorData.result.factoresScore[8].valor);
+          console.log("Operaciones Actuales", numOpActuales);
+          console.log("Número de meses sin vencimientos", mesesSinVencimientos);
+          console.log("Cartera Castigada Deudor", carteraCastigada);
+          console.log("Demanda Judicial Deudor", demandaJudicial);
+        }
+        if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
+            ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
+            console.log("Manejo Ctas Corrientes", ctaCorrientes);
+        }
+        if (deudorData.result && deudorData.result.deudaVigenteTotal) {
+            deudaVigenteTotal = 0;
+            deudorData.result.deudaVigenteTotal.forEach(item => {
+                if (item && item.totalDeuda) {
+                    deudaVigenteTotal += parseFloat(item.totalDeuda) || 0;
+                }
+            });
+            console.log("Pasivos", deudaVigenteTotal);
+        } else {
+            deudaVigenteTotal = 0;
+            console.log("Pasivos", deudaVigenteTotal);
+        }
+        if (deudaVigenteTotal === 0) {
+            cuotaTotal = 0;
+            console.log("Cuota Deudor", cuotaTotal);
+        } else if (deudorData.result && deudorData.result.gastoFinanciero && deudorData.result.gastoFinanciero.length > 0) {
+            cuotaTotal = parseFloat(deudorData.result.gastoFinanciero[0].cuotaEstimadaTitular) || 0;
+            console.log("Cuota Deudor", cuotaTotal);
+        };
+
+        // Procesar datos del cónyuge si existen
+        if (conyugeData) {
+          if (conyugeData.result && conyugeData.result.identificacionTitular && conyugeData.result.identificacionTitular.length > 0) {
+              identificacionConyuge = conyugeData.result.identificacionTitular[0].identificacionSujeto;
+              nombresConyuge = conyugeData.result.identificacionTitular[0].nombreRazonSocial;
+              console.log("Cédula cónyuge:", identificacionConyuge);
+              console.log("Nombres cónyuge:", nombresConyuge);
+          }
+          if(conyugeData.result && conyugeData.result.scoreFinanciero && conyugeData.result.scoreFinanciero.length > 0){
+              scoreConyuge = parseInt(conyugeData.result.scoreFinanciero[0].score);
+              console.log("Score Cónyuge",scoreConyuge);
+          }
+          if(conyugeData.result && conyugeData.result.factoresScore && conyugeData.result.factoresScore.length > 0){
+              numOpActualesConyuge = parseInt(conyugeData.result.factoresScore[0].valor);
+              mesesSinVencimientosConyuge = parseInt(conyugeData.result.factoresScore[2].valor);
+              carteraCastigadaConyuge = parseFloat(conyugeData.result.factoresScore[9].valor);
+              demandaJudicialConyuge= parseFloat(conyugeData.result.factoresScore[8].valor);
+              console.log("Operaciones Actuales Cónyuge", numOpActualesConyuge);
+              console.log("Número de meses sin vencimientos Cónyuge", mesesSinVencimientosConyuge);
+              console.log("Cartera Castigada Cónyuge", carteraCastigadaConyuge);
+              console.log("Demanda Judicial Cónyuge", demandaJudicialConyuge);
+          }
+          if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
+              ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
+              console.log("Manejo Ctas Corrientes Cónyuge", ctaCorrientesConyuge);
+          }
+          if (conyugeData.result && conyugeData.result.deudaVigenteTotal) {
+              deudaVigenteConyuge = 0;
+              conyugeData.result.deudaVigenteTotal.forEach(item => {
+                  if (item && item.totalDeuda) {
+                      deudaVigenteConyuge += parseFloat(item.totalDeuda) || 0;
+                  }
+              });
+              console.log("Pasivos Cónyuge", deudaVigenteConyuge);
+          } else {
+              deudaVigenteConyuge = 0;
+              console.log("Pasivos Cónyuge", deudaVigenteConyuge);
+          }
+    
+          if (deudaVigenteConyuge === 0) {
+            cuotaTotalConyuge = 0;
+            console.log("Cuota Cónyuge", cuotaTotalConyuge);
+          } else if (conyugeData.result && conyugeData.result.gastoFinanciero && conyugeData.result.gastoFinanciero.length > 0) {
+              cuotaTotalConyuge = parseFloat(conyugeData.result.gastoFinanciero[0].cuotaEstimadaTitular) || 0;
+              console.log("Cuota Cónyuge", cuotaTotalConyuge);
+          }
+          };
+        
+        //
+        //Validaciones con datos de API 
+        //
+
+        //Validación SCORE
+          function obtenerValorNumerico(categoria) {
+            switch(categoria){
+              case "AAA": return 3;
+              case "AA": return 2;
+              case "A": return 1;
+              case "Analista": return 0;
+              case "Rechazado": return -1;
+              default: return 0;
+            }
+          }
+       
+        function obtenerDecisionFinal(score, numOpActuales, mesesSinVencimientos) {  
+          let evaScore;
+          if(score >=900){
+            evaScore = "AAA"
+          } else if( score>=800){
+            evaScore = "AA"
+          } else if( score>=700){
+            evaScore = "A"
+          } else if( score>=620){
+            evaScore = "Analista"
+          } else if( score < 620){
+            evaScore = "Rechazado"
+          };
+
+          let evaNumOpe;
+          if(numOpActuales <= 5){
+            evaNumOpe = "AAA"
+          } else if(numOpActuales > 5 && numOpActuales <7){
+            evaNumOpe = "AA"
+          } else if(numOpActuales > 7 && numOpActuales <10){
+            evaNumOpe = "A"
+          } else if(numOpActuales > 10){
+            evaNumOpe = "Analista"
+          };
+
+          let evaMesesSinVen;
+          if(mesesSinVencimientos >= 24){
+            evaMesesSinVen = "AAA"
+          } else if(mesesSinVencimientos <24 && mesesSinVencimientos >=12){
+            evaMesesSinVen = "AA"
+          } else if(mesesSinVencimientos <12 && mesesSinVencimientos >=6){
+            evaMesesSinVen = "A"
+          } else if(mesesSinVencimientos <6){
+            evaMesesSinVen = "Analista"
+          };
+
+          if (evaScore === "Rechazado") {
+            return "Rechazado";
+          };
+
+          const total = obtenerValorNumerico(evaScore) +
+                obtenerValorNumerico(evaNumOpe) +
+                obtenerValorNumerico(evaMesesSinVen);
+          const promedio = total / 3;
+
+          let decisionFinal;
+          if (promedio >= 2.5){
+            decisionFinal = "AAA";
+          } else if (promedio >= 1.5){
+            decisionFinal = "AA";
+          } else if (promedio >= 0.5){
+            decisionFinal = "A";
+          } else {
+            decisionFinal = "Analista";
+          }
+
+          return decisionFinal;
+        };      
+        const evaluacionIntegral = obtenerDecisionFinal(score, numOpActuales, mesesSinVencimientos);
+
+        let evaIntegralConyuge = null;
+
+        if(cedulaConyuge){
+          function obtenerDecisionFinalCyg(scoreConyuge, numOpActualesConyuge, mesesSinVencimientosConyuge) {  
+          let evaScoreCyg;
+          if(scoreConyuge >=900){
+            evaScoreCyg = "AAA"
+          } else if( scoreConyuge>=800){
+            evaScoreCyg = "AA"
+          } else if( scoreConyuge>=700){
+            evaScoreCyg = "A"
+          } else if( scoreConyuge>=620){
+            evaScoreCyg = "Analista"
+          } else if( scoreConyuge < 620){
+            evaScoreCyg = "Rechazado"
+          };
+
+          let evaNumOpeCyg;
+          if(numOpActualesConyuge <= 5){
+            evaNumOpeCyg = "AAA"
+          } else if(numOpActualesConyuge > 5 && numOpActualesConyuge <7){
+            evaNumOpeCyg = "AA"
+          } else if(numOpActualesConyuge > 7 && numOpActualesConyuge <10){
+            evaNumOpeCyg = "A"
+          } else if(numOpActualesConyuge > 10){
+            evaNumOpeCyg = "Analista"
+          };
+
+          let evaMesesSinVenCyg;
+          if(mesesSinVencimientosConyuge >= 24){
+            evaMesesSinVenCyg = "AAA"
+          } else if(mesesSinVencimientosConyuge <24 && mesesSinVencimientosConyuge >=12){
+            evaMesesSinVenCyg = "AA"
+          } else if(mesesSinVencimientosConyuge <12 && mesesSinVencimientosConyuge >=6){
+            evaMesesSinVenCyg = "A"
+          } else if(mesesSinVencimientosConyuge <6){
+            evaMesesSinVenCyg = "Analista"
+          };
+
+          if (evaScoreCyg === "Rechazado") {
+            return "Rechazado";
+          };
+
+          const totalcyg = obtenerValorNumerico(evaScoreCyg) +
+                obtenerValorNumerico(evaNumOpeCyg) +
+                obtenerValorNumerico(evaMesesSinVenCyg);
+          const promediocyg = totalcyg / 3;
+
+          let decisionFinalcyg;
+          if (promediocyg >= 2.5){
+            decisionFinalcyg = "AAA";
+          } else if (promediocyg >= 1.5){
+            decisionFinalcyg = "AA";
+          } else if (promediocyg >= 0.5){
+            decisionFinalcyg = "A";
+          } else {
+            decisionFinalcyg = "Analista";
+          }
+
+          return decisionFinalcyg;
+          };      
+          evaIntegralConyuge = obtenerDecisionFinalCyg(scoreConyuge, numOpActualesConyuge, mesesSinVencimientosConyuge);
+          };
+        
+        let decisionScore;
+        if (evaluacionIntegral == "AAA" || evaluacionIntegral == "AA" || evaluacionIntegral == "A") {
+            if (!conyugeData || evaIntegralConyuge == "AAA" || evaIntegralConyuge == "AA" || evaIntegralConyuge == "A") {
+                decisionScore = "APROBADO";
+            } 
+            else if (evaIntegralConyuge == "Analista" || evaIntegralConyuge == "Sin Información") {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "Rechazado") {
+                decisionScore = "RECHAZAR";
+            }
+        } 
+        else if (evaluacionIntegral == "Analista") {
+            if (!conyugeData) {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "AAA" || evaIntegralConyuge == "AA" || evaIntegralConyuge == "A") {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "Analista" || evaIntegralConyuge == "Sin Información") {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "Rechazado") {
+                decisionScore = "RECHAZAR";
+            }
+        } 
+        else if (evaluacionIntegral == "Rechazado") {
+            decisionScore = "RECHAZAR";
+        } 
+        else if (evaluacionIntegral == "Sin Información") {
+            if (!conyugeData) {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "AAA" || evaIntegralConyuge == "AA" || evaIntegralConyuge == "A") {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "Analista" || evaIntegralConyuge == "Sin Información") {
+                decisionScore = "ANALISTA";
+            }
+            else if (evaIntegralConyuge == "Rechazado") {
+                decisionScore = "RECHAZAR";
+            }
+        };
+        console.log("Calificación" ,evaluacionIntegral)
+        console.log("Calificación Cónyuge" ,evaIntegralConyuge)
+        console.log("Decision SCORE", decisionScore);
+        
+        //Validación Cartera Castigada
+        let decisionCarteraCastigada;
+        if (valorCarteraCastigada > 0) {
+            decisionCarteraCastigada = "RECHAZADO";
+        } 
+        else if (conyugeData && carteraCastigadaConyuge > 0) {
+            decisionCarteraCastigada = "RECHAZADO";
+        } 
+        else {
+            decisionCarteraCastigada = "OK";
+        };
+        console.log("Decision Cartera Castigada", decisionCarteraCastigada);
+
+        //Validación Demanda Judicial
+        let decisionDemandaJudicial;
+        if (valorDemandaJudicial > 0) {
+          decisionDemandaJudicial = "RECHAZADO";
+        } 
+        else if (conyugeData && demandaJudicialConyuge > 0) {
+          decisionDemandaJudicial = "RECHAZADO";
+        } 
+        else {
+          decisionDemandaJudicial = "OK";
+        };
+        console.log("Decision Demanda Judicial", decisionDemandaJudicial);
+        
+
+        // Validación y cálculo de patrimonio
+        const MyE = 3500;
+        let totalPasivos = deudaVigenteTotal + deudaVigenteConyuge;
+        let patrimonio = ((activosNum + MyE) - totalPasivos).toFixed(2);
+        console.log("Patrimonio",patrimonio);
+        console.log("Pasivos Totales", totalPasivos.toFixed(2));
+
+        //Monto a financiar
+        document.getElementById('monto').value = montoNum.toFixed(2);
+
+        //Cuota financiera deudor
+        document.getElementById('gastosFinancierosDeudor').value = cuotaTotal.toFixed(2);
+
+        //Cuota financiera deudor
+        if(conyugeData){
+          document.getElementById('gastosFinancierosConyuge').value = cuotaTotalConyuge.toFixed(2);
+        };        
+
+        // Cálculo de la cuota mensual
+        const interesMensual = 0.1560 / 12;
+
+        //Cálculo de cuota final a financiar
+        const gtosLegales = 700;
+        const dispositivo = 1400; //dispositivo a 3 años
+        const seguroDesgravamen = montoNum * 0.025; //2.50% tasa referencial
+        const seguroVehicular = valorVehiculo * 0.041; //4.10% tasa referencial
+
+        // Cálculo de monto a financiar con seguros, gastos legales y dispositivo
+        const montoTotal = montoNum + gtosLegales + dispositivo + seguroDesgravamen + seguroVehicular;
+        
+        // Cálculo de cuota final con seguros, gastos legales y dispositivo
+        const cuotaFinal = (montoTotal * interesMensual) / (1 - Math.pow(1 + interesMensual, -plazoNum));
+
+                
+        // Cálculo de gastos familiares
+        let gastosFamiliares;
+        if (!cedulaConyuge) {
+            gastosFamiliares = 150;
+        } else {
+            gastosFamiliares = 240;
+        }
+
+        // Cálculo del costo adicional por hijos
+        let numHijos = 0;
+        for (let i = 1; i <= numeroHijos; i++) {
+            numHijos += 90;
+        }
+ 
+        // Cálculo de ingresos y gastos totales
+        const ingresoBruto = ingresoDeudorNum + ingresoConyugeNum + otrosIngresosNum;
+        const gastosFamiliaresTotales = gastosFamiliares + numHijos;
+        document.getElementById('gastosFamiliaresTotales').value = gastosFamiliaresTotales.toFixed(2); 
+        const gastosTotales = cuotaTotal + cuotaTotalConyuge + gastosFamiliaresTotales;
+        const ingresoNeto = ingresoBruto - gastosTotales;
+        const ingresoDisponible = ingresoNeto * 0.50;
+        const indicadorEndeudamiento = ingresoDisponible / cuotaTotal;
+
+        //Árbol de decisión
+        let decisionFinal;
+        if(decisionScore == "RECHAZAR" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" ){
+          decisionFinal = "RECHAZADO"
+        } else if((decisionScore == "ANALISTA" || decisionScore == "APROBADO") && decisionCarteraCastigada == "RECHAZADO"){
+          decisionFinal = "RECHAZADO"
+        } else if((decisionScore == "ANALISTA" || decisionScore == "APROBADO") && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "RECHAZADO"){
+          decisionFinal = "RECHAZADO"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS  // JUSTIFICAR PATRIMONIO"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
+          decisionFinal = "PRE - APROBADO ANALISTA"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
+          decisionFinal = "PRE - APROBADO // JUSTIFICAR INGRESOS  // JUSTIFICAR PATRIMONIO"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento > 1){
+          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR PATRIMONIO"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR INGRESOS"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
+          decisionFinal = "PRE - APROBADO"
+        } else{
+          decisionFinal = "RECHAZADO"
+        }
+        console.log(decisionFinal);
+
+        // Crear el contenido HTML para mostrar los resultados
+        const resultadosHTML = `
+            <p><strong>Monto a Financiar:</strong> $${montoTotal.toFixed(2)}</p>
+            <p><strong>Plazo:</strong> ${plazoNum} meses</p>
+            <p><strong>Tasa:</strong> ${(0.1560 * 100).toFixed(2)}%</p>
+            <p><strong>Cuota Mensual:</strong> $${cuotaFinal.toFixed(2)}</p>`;
+
+        // Crear el contenido HTML para mostrar los resultados
+        const FinalDecision = `
+            <h3><strong>${decisionFinal}</strong>`;
+        
+        // Mostrar los resultados en el contenedor
+        document.getElementById('resultados').innerHTML = resultadosHTML;
+        document.getElementById('decision').innerHTML = FinalDecision;
+          
+        // Datos a guardar en MongoDB
+        const datosAnalisis = {
+          cedulaDeudor: identificacionSujeto,
+          nombreDeudor: nombreRazonSocial,
+          scoreDeudor: score,
+          evaluacionIntegralDeudor: evaluacionIntegral,
+          cedulaConyuge: identificacionConyuge,
+          nombreConyuge: nombresConyuge,
+          scoreConyuge: scoreConyuge,
+          evaluacionIntegralConyuge: evaIntegralConyuge,
+          patrimonio: patrimonio,
+          ingresos: ingresoBruto,
+          gastos: gastosTotales,
+          marca: marca,
+          modelo: modelo,
+          valorVehiculo: valorVehiculo,
+          entrada: entrada,
+          gtosLegales: gtosLegales,
+          dispositivo: dispositivo,
+          seguroDesgravamen: seguroDesgravamen.toFixed(2),
+          seguroVehicular: seguroVehicular.toFixed(2),
+          montoFinanciar: montoTotal.toFixed(2),
+          cuotaMensual: cuotaFinal.toFixed(2),
+          plazo: plazoNum,
+          indicadorEndeudamiento: indicadorEndeudamiento.toFixed(2),
+          decisionFinal: decisionFinal,
+          fecha: new Date()
+        };
+
+        // Enviar al backend
+        fetch('https://calcbackend.onrender.com/guardarAnalisis', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(datosAnalisis)
+        })
+        .then(res => res.json())
+        .then(data => console.log('Análisis guardado en DB:', data))
+        .catch(err => console.error('Error al guardar análisis:', err));
+
+        // Generar el PDF
+        const doc = new jsPDF();
+
+        // Configuración inicial
+        doc.setFont('helvetica');
+        doc.setFontSize(12);
+
+        // Título principal
+        doc.setFontSize(16);
+        doc.setTextColor(0, 0, 128);
+        doc.text('RESUMEN DE ANÁLISIS CREDITICIO', 105, 20, null, null, 'center');
+
+        // Información del cliente
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`Cliente: ${nombreRazonSocial}`, 14, 30);
+        doc.text(`Cédula: ${identificacionSujeto}`, 110, 30);
+        doc.text(`Score: ${score}`, 14, 36);
+        doc.text(`Decisión: ${evaluacionIntegral}`, 110, 36);
+
+        let yOffset = 60;
+
+        if (identificacionConyuge) {
+          doc.text(`Cónyuge: ${nombresConyuge}`, 14, yOffset);
+          doc.text(`Cédula cónyuge: ${identificacionConyuge}`, 110, yOffset);
+          yOffset += 6;
+          doc.text(`Score cónyuge: ${scoreConyuge}`, 14, yOffset);
+          doc.text(`Evaluación cónyuge: ${evaIntegralConyuge}`, 110, yOffset);
+          yOffset += 6;
+        } else {
+          yOffset += 6;
+        }
+
+        // Datos del crédito
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 128);
+        doc.text('DETALLES DEL CRÉDITO SOLICITADO', 14, yOffset + 10);
+
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 0);
+        doc.text(`• Monto solicitado: $${montoTotal.toFixed(2)}`, 20, yOffset + 18);
+        doc.text(`• Plazo: ${plazoNum} meses`, 20, yOffset + 26);
+        doc.text(`• Tasa de interés: ${(0.1560 * 100).toFixed(2)}% anual`, 20, yOffset + 34);
+        doc.text(`• Cuota mensual estimada: $${cuotaFinal.toFixed(2)}`, 20, yOffset + 42);
+
+        // Situación financiera
+        let cuadroTop = yOffset + 60;
+        doc.setFontSize(14);
+        doc.setTextColor(0, 0, 128);
+        doc.text('SITUACIÓN FINANCIERA', 14, cuadroTop);
+
+        // Cuadro general
+        doc.setDrawColor(0, 0, 128);
+        doc.setLineWidth(0.5);
+        doc.rect(14, cuadroTop + 6, 180, 70);
+
+        // Líneas horizontales
+        for (let i = 1; i <= 5; i++) {
+          doc.line(14, cuadroTop + 6 + (i * 14), 194, cuadroTop + 6 + (i * 14));
+        }
+
+        // Línea vertical
+        doc.line(100, cuadroTop + 6, 100, cuadroTop + 76);
+
+        // Título columna izquierda
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 128);
+        doc.text('CAPACIDAD DE PAGO', 20, cuadroTop + 13);
+
+        // Detalles columna izquierda
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Ingresos totales:', 20, cuadroTop + 23);
+        doc.text('Gastos familiares:', 20, cuadroTop + 37);
+        doc.text('Obligaciones deudor:', 20, cuadroTop + 51);
+        doc.text('Obligaciones cónyuge:', 20, cuadroTop + 65);
+        doc.text('Ingreso disponible:', 20, cuadroTop + 79);
+
+        // Valores columna izquierda
+        doc.setFont('helvetica', 'bold');
+        doc.text(`$${ingresoBruto.toFixed(2)}`, 70, cuadroTop + 23);
+        doc.text(`$${gastosFamiliaresTotales.toFixed(2)}`, 70, cuadroTop + 37);
+        doc.text(`$${cuotaTotal.toFixed(2)}`, 70, cuadroTop + 51);
+        doc.text(`$${cuotaTotalConyuge.toFixed(2)}`, 70, cuadroTop + 65);
+        doc.text(`$${ingresoDisponible.toFixed(2)}`, 70, cuadroTop + 79);
+
+        // Título columna derecha
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 128);
+        doc.text('PATRIMONIO', 120, cuadroTop + 13);
+
+        // Detalles columna derecha
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+        doc.text('Activos declarados:', 110, cuadroTop + 23);
+        doc.text('Pasivos totales:', 110, cuadroTop + 37);
+        doc.text('Patrimonio neto:', 110, cuadroTop + 51);
+
+        // Valores columna derecha
+        doc.setFont('helvetica', 'bold');
+        doc.text(`$${activosNum.toFixed(2)}`, 160, cuadroTop + 23);
+        doc.text(`$${totalPasivos.toFixed(2)}`, 160, cuadroTop + 37);
+        if (parseFloat(patrimonio) >= 0) {
+        doc.setTextColor(0, 128, 0);
+        } else {
+        doc.setTextColor(255, 0, 0);
+        }
+        doc.text(`$${patrimonio}`, 160, cuadroTop + 51);
+
+        // Resultado final
+        doc.setFontSize(12);
+        doc.setTextColor(0, 0, 128);
+        doc.text('RESULTADO DEL ANÁLISIS', 14, cuadroTop + 88);
+
+        doc.setFontSize(14);
+        if (decisionFinal.includes("APROBADO")) {
+          doc.setTextColor(0, 128, 0);
+        } else if (decisionFinal.includes("ANALISTA")) {
+          doc.setTextColor(255, 165, 0);
+        } else {
+          doc.setTextColor(255, 0, 0);
+        }
+        doc.text(`${decisionFinal}`, 20, cuadroTop + 96);
+
+        // Observaciones
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Observaciones: Este documento es un resumen informativo.', 14, 275);
+        doc.text('La aprobación final está sujeta a verificación documental y políticas crediticias.', 14, 280);
+
+        // Pie de página
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, 290, null, null, 'center');
+
+        // Guardar PDF
+        doc.save(`${nombreRazonSocial}.pdf`);
+        })
+        .catch(error => console.error('Error en la consulta:', error));
+    });
