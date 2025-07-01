@@ -115,6 +115,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     let score;
     let scoreConyuge;
     let ctaCorrientes;
+    let ctaCorrientesConyuge;
     let deudaVigenteTotal;
     let cuotaTotal;
     let valorDemandaJudicial;
@@ -136,7 +137,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
     //Función para llamar API
     fetchPromises.push(
-        fetch('https://calcbackend.onrender.com/proxy', {
+        fetch('18.191.233.25/proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json',
                      'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -163,7 +164,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
       // Si existe cédula del cónyuge, agregamos otra solicitud fetch para el cónyuge
       if (cedulaConyuge) {
         fetchPromises.push(
-          fetch('https://calcbackend.onrender.com/proxy', {
+          fetch('18.191.233.25/proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
                        'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -220,6 +221,9 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         }
         if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
             ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
+            if(ctaCorrientes = undefined){
+              ctaCorrientes = "No posee restricción"
+            }
             console.log("Manejo Ctas Corrientes", ctaCorrientes);
         }
         if (deudorData.result && deudorData.result.deudaVigenteTotal) {
@@ -266,6 +270,9 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           }
           if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
               ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
+              if(ctaCorrientesConyuge = undefined){
+                ctaCorrientesConyuge = "No posee restricción"
+              }
               console.log("Manejo Ctas Corrientes Cónyuge", ctaCorrientesConyuge);
           }
           if (conyugeData.result && conyugeData.result.deudaVigenteTotal) {
@@ -516,10 +523,12 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
         //Cuota financiera deudor
         document.getElementById('gastosFinancierosDeudor').value = cuotaTotal.toFixed(2);
+        cuotaTotal = parseFloat(cuotaTotal);
 
         //Cuota financiera deudor
         if(conyugeData){
           document.getElementById('gastosFinancierosConyuge').value = cuotaTotalConyuge.toFixed(2);
+          cuotaTotalConyuge = parseFloat(cuotaTotalConyuge);
         };        
 
         // Cálculo de la cuota mensual
@@ -559,7 +568,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         const gastosTotales = cuotaTotal + cuotaTotalConyuge + gastosFamiliaresTotales;
         const ingresoNeto = ingresoBruto - gastosTotales;
         const ingresoDisponible = ingresoNeto * 0.50;
-        const indicadorEndeudamiento = ingresoDisponible / cuotaTotal;
+        const indicadorEndeudamiento = ingresoDisponible / cuotaFinal;
 
         //Árbol de decisión
         let decisionFinal;
@@ -635,7 +644,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         };
 
         // Enviar al backend
-        fetch('https://calcbackend.onrender.com/guardarAnalisis', {
+        fetch('18.191.233.25/guardarAnalisis', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -646,143 +655,316 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         .then(data => console.log('Análisis guardado en DB:', data))
         .catch(err => console.error('Error al guardar análisis:', err));
 
-        // Generar el PDF
-        const doc = new jsPDF();
+          const doc = new jsPDF();
+          const pageHeight = doc.internal.pageSize.height;
+          let y = 20;
 
-        // Configuración inicial
-        doc.setFont('helvetica');
-        doc.setFontSize(12);
+          function addLineBreak(lines = 1, lineHeight = 6) {
+            y += lines * lineHeight;
+            if (y > pageHeight - 20) {
+              doc.addPage();
+              y = 20;
+            }
+          }
 
-        // Título principal
-        doc.setFontSize(16);
-        doc.setTextColor(0, 0, 128);
-        doc.text('RESUMEN DE ANÁLISIS CREDITICIO', 105, 20, null, null, 'center');
+          // Estilo general
+          doc.setFont('helvetica', );
+          doc.setFontSize(12);
 
-        // Información del cliente
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`Cliente: ${nombreRazonSocial}`, 14, 30);
-        doc.text(`Cédula: ${identificacionSujeto}`, 110, 30);
-        doc.text(`Score: ${score}`, 14, 36);
-        doc.text(`Decisión: ${evaluacionIntegral}`, 110, 36);
+          // Título
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(16);
+          doc.setTextColor(0, 0, 128);
+          doc.text('RESUMEN DE ANÁLISIS CREDITICIO', 105, y, null, null, 'center');
+          addLineBreak(2);
 
-        let yOffset = 60;
+          // DATOS DEL DEUDOR
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(14);
+          doc.setTextColor(0, 0, 128);
+          doc.text('DATOS DEL DEUDOR', 14, y);
+          addLineBreak();
 
-        if (identificacionConyuge) {
-          doc.text(`Cónyuge: ${nombresConyuge}`, 14, yOffset);
-          doc.text(`Cédula cónyuge: ${identificacionConyuge}`, 110, yOffset);
-          yOffset += 6;
-          doc.text(`Score cónyuge: ${scoreConyuge}`, 14, yOffset);
-          doc.text(`Evaluación cónyuge: ${evaIntegralConyuge}`, 110, yOffset);
-          yOffset += 6;
-        } else {
-          yOffset += 6;
-        }
+          doc.setFontSize(11);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Nombre:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${nombreRazonSocial}`, 70, y);
+          addLineBreak();
 
-        // Datos del crédito
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 128);
-        doc.text('DETALLES DEL CRÉDITO SOLICITADO', 14, yOffset + 10);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Cédula:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${identificacionSujeto}`, 70, y);
+          addLineBreak();
 
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        doc.text(`• Monto solicitado: $${montoTotal.toFixed(2)}`, 20, yOffset + 18);
-        doc.text(`• Plazo: ${plazoNum} meses`, 20, yOffset + 26);
-        doc.text(`• Tasa de interés: ${(0.1560 * 100).toFixed(2)}% anual`, 20, yOffset + 34);
-        doc.text(`• Cuota mensual estimada: $${cuotaFinal.toFixed(2)}`, 20, yOffset + 42);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Score:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${score}`, 70, y);
 
-        // Situación financiera
-        let cuadroTop = yOffset + 60;
-        doc.setFontSize(14);
-        doc.setTextColor(0, 0, 128);
-        doc.text('SITUACIÓN FINANCIERA', 14, cuadroTop);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Decisión:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${evaluacionIntegral}`, 160, y);
+          addLineBreak();
 
-        // Cuadro general
-        doc.setDrawColor(0, 0, 128);
-        doc.setLineWidth(0.5);
-        doc.rect(14, cuadroTop + 6, 180, 70);
+          doc.setFont('helvetica', 'normal');
+          doc.text('N° operaciones actuales:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${numOpActuales}`, 70, y);
+          addLineBreak();
 
-        // Líneas horizontales
-        for (let i = 1; i <= 5; i++) {
-          doc.line(14, cuadroTop + 6 + (i * 14), 194, cuadroTop + 6 + (i * 14));
-        }
+          doc.setFont('helvetica', 'normal');
+          doc.text('Meses sin vencimientos:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${mesesSinVencimientos}`, 70, y);
+          addLineBreak();
 
-        // Línea vertical
-        doc.line(100, cuadroTop + 6, 100, cuadroTop + 76);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Cartera castigada:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${carteraCastigada.toFixed(2)}`, 70, y);
+          addLineBreak();
 
-        // Título columna izquierda
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 128);
-        doc.text('CAPACIDAD DE PAGO', 20, cuadroTop + 13);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Demanda judicial:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${demandaJudicial.toFixed(2)}`, 70, y);
+          addLineBreak();
 
-        // Detalles columna izquierda
-        doc.setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Ingresos totales:', 20, cuadroTop + 23);
-        doc.text('Gastos familiares:', 20, cuadroTop + 37);
-        doc.text('Obligaciones deudor:', 20, cuadroTop + 51);
-        doc.text('Obligaciones cónyuge:', 20, cuadroTop + 65);
-        doc.text('Ingreso disponible:', 20, cuadroTop + 79);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Manejo cuentas corrientes:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${ctaCorrientes}`, 70, y);
+          addLineBreak();
 
-        // Valores columna izquierda
-        doc.setFont('helvetica', 'bold');
-        doc.text(`$${ingresoBruto.toFixed(2)}`, 70, cuadroTop + 23);
-        doc.text(`$${gastosFamiliaresTotales.toFixed(2)}`, 70, cuadroTop + 37);
-        doc.text(`$${cuotaTotal.toFixed(2)}`, 70, cuadroTop + 51);
-        doc.text(`$${cuotaTotalConyuge.toFixed(2)}`, 70, cuadroTop + 65);
-        doc.text(`$${ingresoDisponible.toFixed(2)}`, 70, cuadroTop + 79);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Deuda vigente total:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${deudaVigenteTotal.toFixed(2)}`, 70, y);
+          addLineBreak();
 
-        // Título columna derecha
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 128);
-        doc.text('PATRIMONIO', 120, cuadroTop + 13);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Cuota estimada deudor:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${cuotaTotal.toFixed(2)}`, 70, y);
+          addLineBreak(2);
 
-        // Detalles columna derecha
-        doc.setFontSize(11);
-        doc.setTextColor(0, 0, 0);
-        doc.text('Activos declarados:', 110, cuadroTop + 23);
-        doc.text('Pasivos totales:', 110, cuadroTop + 37);
-        doc.text('Patrimonio neto:', 110, cuadroTop + 51);
+          // DATOS DEL CÓNYUGE (si existen)
+          if (identificacionConyuge) {
+            doc.setFontSize(14);
+            doc.setTextColor(0, 0, 128);
+            doc.text('DATOS DEL CÓNYUGE', 14, y);
+            addLineBreak();
 
-        // Valores columna derecha
-        doc.setFont('helvetica', 'bold');
-        doc.text(`$${activosNum.toFixed(2)}`, 160, cuadroTop + 23);
-        doc.text(`$${totalPasivos.toFixed(2)}`, 160, cuadroTop + 37);
-        if (parseFloat(patrimonio) >= 0) {
-        doc.setTextColor(0, 128, 0);
-        } else {
-        doc.setTextColor(255, 0, 0);
-        }
-        doc.text(`$${patrimonio}`, 160, cuadroTop + 51);
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Nombre:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${nombresConyuge}`, 70, y);
+            addLineBreak();
 
-        // Resultado final
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 128);
-        doc.text('RESULTADO DEL ANÁLISIS', 14, cuadroTop + 88);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Cédula:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${identificacionConyuge}`, 70, y);
+            addLineBreak();
 
-        doc.setFontSize(14);
-        if (decisionFinal.includes("APROBADO")) {
-          doc.setTextColor(0, 128, 0);
-        } else if (decisionFinal.includes("ANALISTA")) {
-          doc.setTextColor(255, 165, 0);
-        } else {
-          doc.setTextColor(255, 0, 0);
-        }
-        doc.text(`${decisionFinal}`, 20, cuadroTop + 96);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Score:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${scoreConyuge}`, 70, y);
 
-        // Observaciones
-        doc.setFontSize(10);
-        doc.setTextColor(100, 100, 100);
-        doc.text('Observaciones: Este documento es un resumen informativo.', 14, 275);
-        doc.text('La aprobación final está sujeta a verificación documental y políticas crediticias.', 14, 280);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Decisión:', 110, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${evaIntegralConyuge}`, 160, y);
+            addLineBreak();
 
-        // Pie de página
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, 290, null, null, 'center');
+            doc.setFont('helvetica', 'normal');
+            doc.text('N° operaciones actuales:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${numOpActualesConyuge}`, 70, y);
+            addLineBreak();
 
-        // Guardar PDF
-        doc.save(`${nombreRazonSocial}.pdf`);
+            doc.setFont('helvetica', 'normal');
+            doc.text('Meses sin vencimientos:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${mesesSinVencimientosConyuge}`, 70, y);
+            addLineBreak();
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Cartera castigada:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`$${carteraCastigadaConyuge.toFixed(2)}`, 70, y);
+            addLineBreak();
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Demanda judicial:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`$${demandaJudicialConyuge.toFixed(2)}`, 70, y);
+            addLineBreak();
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Manejo cuentas corrientes:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`${ctaCorrientesConyuge}`, 70, y);
+            addLineBreak();
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Deuda vigente total:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`$${deudaVigenteConyuge.toFixed(2)}`, 70, y);
+            addLineBreak();
+
+            doc.setFont('helvetica', 'normal');
+            doc.text('Cuota estimada cónyuge:', 20, y);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`$${cuotaTotalConyuge.toFixed(2)}`, 70, y);
+            addLineBreak(2);
+          }
+         
+          // RESUMEN DEL CRÉDITO CALCULADO
+          doc.setFontSize(14);
+          doc.setTextColor(0, 0, 128);
+          doc.text('DETALLES DEL CRÉDITO', 14, y);
+          addLineBreak();
+
+          doc.setFontSize(11);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont('helvetica', 'normal');
+          doc.text('Monto a financiar:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${montoTotal.toFixed(2)}`, 80, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Plazo:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${plazoNum} meses`, 80, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Tasa de interés:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${(0.1560 * 100).toFixed(2)}%`, 80, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Cuota mensual estimada:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${cuotaFinal.toFixed(2)}`, 80, y);
+          addLineBreak(2);
+
+          // RESUMEN CAPACIDAD DE PAGO Y PATRIMONIO
+          doc.setFontSize(14);
+          doc.setTextColor(0, 0, 128);
+          doc.text('DETALLES CAPACIDAD DE PAGO', 14, y);
+          doc.text('DETALLES PATRIMONIO', 104, y);
+          addLineBreak();
+
+          doc.setFontSize(11);
+          doc.setTextColor(0, 0, 0);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Ingreso Total:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${ingresoBruto.toFixed(2)}`, 70, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Activos:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${activosNum.toFixed(2)}`, 160, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Gastos Familiares:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${gastosFamiliaresTotales.toFixed(2)}`, 70, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Pasivos:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${totalPasivos.toFixed(2)}`, 160, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Obligaciones Deudor:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${cuotaTotal.toFixed(2)}`, 70, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Patrimonio:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${parseFloat(patrimonio).toFixed(2)}`, 160, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Obligaciones Cónyuge:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${cuotaTotalConyuge.toFixed(2)}`, 70, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Ingreso Neto:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${ingresoNeto.toFixed(2)}`, 70, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Ingreso Disponible:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${ingresoDisponible.toFixed(2)}`, 70, y);
+          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Indicador:', 20, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${indicadorEndeudamiento.toFixed(2)}`, 70, y);
+          addLineBreak(2);
+
+          // DECISIÓN FINAL EN COLOR DESTACADO
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+
+          if (decisionFinal.includes("APROBADO")) {
+            doc.setTextColor(0, 128, 0);
+          } else if (decisionFinal.includes("ANALISTA")) {
+            doc.setTextColor(255, 165, 0);
+          } else {
+            doc.setTextColor(255, 0, 0);
+          }
+
+          doc.text(`DECISIÓN FINAL: ${decisionFinal}`, 105, y, null, null, 'center');
+          addLineBreak();
+
+          // Restaurar color para texto informativo posterior
+          doc.setTextColor(0, 0, 0);
+
+          // Pie de página
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, pageHeight - 10, null, null, 'center');
+
+          // Enviar PDF al backend para envío por correo
+
+          const pdfBase64 = doc.output('datauristring');
+
+          fetch('18.191.233.25/enviarCorreo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              pdfBase64: pdfBase64,
+              nombreArchivo: `${nombreRazonSocial}.pdf`,
+              destinatarios: ['jandrade@tactiqaec.com', 'pmantilla@tactiqaec.com']
+            })
+          })
+          .then(res => res.json())
+          .then(data => console.log('Correo enviado:', data))
+          .catch(err => console.error('Error al enviar correo:', err));
         })
         .catch(error => console.error('Error en la consulta:', error));
     });
