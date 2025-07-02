@@ -6,7 +6,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
     const password = document.getElementById('password').value;
     
     try {
-        const response = await fetch('18.191.233.25/login', {
+        const response = await fetch("https://calcserver-3evg.onrender.com/login", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, password })

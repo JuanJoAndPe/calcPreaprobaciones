@@ -137,7 +137,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
     //Función para llamar API
     fetchPromises.push(
-        fetch('18.191.233.25/proxy', {
+        fetch('https://calcserver-3evg.onrender.com/proxy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json',
                      'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -164,7 +164,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
       // Si existe cédula del cónyuge, agregamos otra solicitud fetch para el cónyuge
       if (cedulaConyuge) {
         fetchPromises.push(
-          fetch('18.191.233.25/proxy', {
+          fetch('https://calcserver-3evg.onrender.com/proxy', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json',
                        'Authorization': 'Bearer ' + localStorage.getItem('token')
@@ -644,7 +644,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         };
 
         // Enviar al backend
-        fetch('18.191.233.25/guardarAnalisis', {
+        fetch('https://calcserver-3evg.onrender.com/guardarAnalisis', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -953,7 +953,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
           const pdfBase64 = doc.output('datauristring');
 
-          fetch('18.191.233.25/enviarCorreo', {
+          fetch('https://calcserver-3evg.onrender.com/enviarCorreo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -968,3 +968,42 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         })
         .catch(error => console.error('Error en la consulta:', error));
     });
+    function limpiarFormulario() {
+    const inputs = document.querySelectorAll('#app-container input, #app-container select');
+    inputs.forEach(input => {
+        if (input.type === 'radio' || input.type === 'checkbox') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+    document.getElementById('monto').value = '';
+    document.getElementById('gastosFamiliaresTotales').value = '';
+    document.getElementById('gastosFinancierosDeudor').value = '';
+    document.getElementById('gastosFinancierosConyuge').value = '';
+    document.getElementById('resultados').innerHTML = '';
+    document.getElementById('decision').innerHTML = '';
+    }
+
+    document.getElementById('new-query-btn').addEventListener('click', limpiarFormulario);
+
+    let timeoutInactividad;
+
+    function reiniciarTemporizador() {
+        clearTimeout(timeoutInactividad);
+        timeoutInactividad = setTimeout(cerrarSesionAutomatica, 30 * 60 * 1000);
+    }
+
+    function cerrarSesionAutomatica() {
+        alert("Sesión cerrada por inactividad.");
+        document.getElementById('app-container').style.display = 'none';
+        document.getElementById('login-container').style.display = 'block';
+        localStorage.removeItem('token');
+        limpiarFormulario();
+    }
+
+    ['click', 'mousemove', 'keydown'].forEach(event => {
+        document.addEventListener(event, reiniciarTemporizador);
+    });
+
+    reiniciarTemporizador();
