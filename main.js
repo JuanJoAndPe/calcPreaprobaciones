@@ -831,32 +831,54 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           doc.setFontSize(14);
           doc.setTextColor(0, 0, 128);
           doc.text('DETALLES DEL CRÉDITO', 14, y);
+          doc.text('DETALLES DE VEHÍCULO',104,y);
           addLineBreak();
 
           doc.setFontSize(11);
           doc.setTextColor(0, 0, 0);
+
           doc.setFont('helvetica', 'normal');
           doc.text('Monto a financiar:', 20, y);
           doc.setFont('helvetica', 'bold');
           doc.text(`$${montoTotal.toFixed(2)}`, 80, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Vehículo:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${marca}`, 160, y);
           addLineBreak();
 
           doc.setFont('helvetica', 'normal');
           doc.text('Plazo:', 20, y);
           doc.setFont('helvetica', 'bold');
           doc.text(`${plazoNum} meses`, 80, y);
-          addLineBreak();
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Modelo:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${modelo}`, 160, y);
+          addLineBreak();          
 
           doc.setFont('helvetica', 'normal');
           doc.text('Tasa de interés:', 20, y);
           doc.setFont('helvetica', 'bold');
           doc.text(`${(0.1560 * 100).toFixed(2)}%`, 80, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Valor del Vehículo:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${valorVehiculo.toFixed(2)}`, 160, y);
           addLineBreak();
 
           doc.setFont('helvetica', 'normal');
           doc.text('Cuota mensual estimada:', 20, y);
           doc.setFont('helvetica', 'bold');
           doc.text(`$${cuotaFinal.toFixed(2)}`, 80, y);
+
+          doc.setFont('helvetica', 'normal');
+          doc.text('Entrada:', 110, y);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`$${entrada.toFixed(2)}`, 160, y);
           addLineBreak(2);
 
           // RESUMEN CAPACIDAD DE PAGO Y PATRIMONIO
