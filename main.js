@@ -118,8 +118,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     let ctaCorrientesConyuge;
     let deudaVigenteTotal;
     let cuotaTotal;
-    let valorDemandaJudicial;
-    let valorCarteraCastigada;
+    let valorDemandaJudicial = parseFloat(valorDemandaJudicial);
+    let valorCarteraCastigada = parseFloat(valorCarteraCastigada);
     let deudaVigenteConyuge = 0;
     let cuotaTotalConyuge = 0;
     let numOpActuales; 
@@ -128,8 +128,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     let demandaJudicial;
     let numOpActualesConyuge;
     let mesesSinVencimientosConyuge;
-    let carteraCastigadaConyuge;
-    let demandaJudicialConyuge;
+    let carteraCastigadaConyuge= parseFloat(carteraCastigadaConyuge);;
+    let demandaJudicialConyuge = parseFloat(demandaJudicialConyuge);
 
 
     // Crear un array de promesas para las solicitudes fetch
@@ -486,7 +486,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         
         //Validación Cartera Castigada
         let decisionCarteraCastigada;
-        if (valorCarteraCastigada > 0) {
+        if (carteraCastigada > 0) {
             decisionCarteraCastigada = "RECHAZADO";
         } 
         else if (conyugeData && carteraCastigadaConyuge > 0) {
@@ -499,7 +499,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
         //Validación Demanda Judicial
         let decisionDemandaJudicial;
-        if (valorDemandaJudicial > 0) {
+        if (demandaJudicial > 0) {
           decisionDemandaJudicial = "RECHAZADO";
         } 
         else if (conyugeData && demandaJudicialConyuge > 0) {
