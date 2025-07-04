@@ -10,8 +10,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     // Obtener los valores de los campos
     const marca = document.getElementById('marca').value;
     const modelo = document.getElementById('modelo').value;
-    const valorVehiculo = document.getElementById('valor').value;
-    const entrada = document.getElementById('entrada').value;
+    const valorVehiculo = parseFloat(document.getElementById('valor').value);
+    const entrada = parseFloat(document.getElementById('entrada').value);
     const ingresoDeudor = document.getElementById('ingresoDeudor').value;
     const plazo = document.getElementById('plazo').value;
     const ingresoConyuge = document.getElementById('ingresoConyuge').value || 0;
@@ -512,9 +512,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         
 
         // Validación y cálculo de patrimonio
-        const MyE = 3500;
         let totalPasivos = deudaVigenteTotal + deudaVigenteConyuge;
-        let patrimonio = ((activosNum + MyE) - totalPasivos).toFixed(2);
+        let patrimonio = ((activosNum + valorVehiculo) - totalPasivos).toFixed(2);
         console.log("Patrimonio",patrimonio);
         console.log("Pasivos Totales", totalPasivos.toFixed(2));
 
@@ -537,8 +536,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         //Cálculo de cuota final a financiar
         const gtosLegales = 700;
         const dispositivo = 1400; //dispositivo a 3 años
-        const seguroDesgravamen = montoNum * 0.025; //2.50% tasa referencial
-        const seguroVehicular = valorVehiculo * 0.041; //4.10% tasa referencial
+        const seguroDesgravamen = montoNum * 0.025; //2.10% tasa referencial
+        const seguroVehicular = valorVehiculo * 0.0401; //4.09% tasa referencial
 
         // Cálculo de monto a financiar con seguros, gastos legales y dispositivo
         const montoTotal = montoNum + gtosLegales + dispositivo + seguroDesgravamen + seguroVehicular;
@@ -546,29 +545,43 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         // Cálculo de cuota final con seguros, gastos legales y dispositivo
         const cuotaFinal = (montoTotal * interesMensual) / (1 - Math.pow(1 + interesMensual, -plazoNum));
 
-                
-        // Cálculo de gastos familiares
-        let gastosFamiliares;
-        if (!cedulaConyuge) {
-            gastosFamiliares = 150;
-        } else {
-            gastosFamiliares = 240;
-        }
-
-        // Cálculo del costo adicional por hijos
-        let numHijos = 0;
-        for (let i = 1; i <= numeroHijos; i++) {
-            numHijos += 90;
-        }
  
         // Cálculo de ingresos y gastos totales
         const ingresoBruto = ingresoDeudorNum + ingresoConyugeNum + otrosIngresosNum;
+        // Cálculo de gastos familiares
+        let gastosFamiliares;
+        if(ingresoBruto <= 1500){
+          if(!cedulaConyuge){
+            gastosFamiliares = 150
+          } else {
+            gastosFamiliares = 240
+          }
+        } else{
+          if (!cedulaConyuge) {
+            gastosFamiliares = ingresoBruto * 0.2;
+          } else {
+            gastosFamiliares = ingresoBruto * 0.25;
+        }
+        }     
+
+        // Cálculo del costo adicional por hijos
+        let numHijos = 0;
+        if(ingresoBruto <= 1500){
+          for (let i = 1; i <= numeroHijos; i++) {
+            numHijos += 90;
+          }
+        } else {
+          for (let i = 1; i <= numeroHijos; i++) {
+            numHijos += ingresoBruto * 0.05;
+          }
+        }
         const gastosFamiliaresTotales = gastosFamiliares + numHijos;
         document.getElementById('gastosFamiliaresTotales').value = gastosFamiliaresTotales.toFixed(2); 
         const gastosTotales = cuotaTotal + cuotaTotalConyuge + gastosFamiliaresTotales;
         const ingresoNeto = ingresoBruto - gastosTotales;
         const ingresoDisponible = ingresoNeto * 0.50;
         const indicadorEndeudamiento = ingresoDisponible / cuotaFinal;
+        const porcEntrada = (entrada/valorVehiculo)*100;
 
         //Árbol de decisión
         let decisionFinal;
@@ -643,6 +656,9 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           fecha: new Date()
         };
 
+        const fecha = new Date();
+        const fechaFormateada = fecha.toISOString().split('T')[0];
+
         // Enviar al backend
         fetch('https://calcserver-3evg.onrender.com/guardarAnalisis', {
           method: 'POST',
@@ -652,7 +668,45 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           body: JSON.stringify(datosAnalisis)
         })
         .then(res => res.json())
-        .then(data => console.log('Análisis guardado en DB:', data))
+        .then(data => {
+          console.log('Análisis guardado en DB:', data);
+
+          // Ahora guardar en Excel
+          fetch('https://calcserver-3evg.onrender.com/guardarExcel', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
+            body: JSON.stringify({
+              fecha: fechaFormateada,
+              cedula: identificacionSujeto,
+              nombre: nombreRazonSocial,
+              cedula_cyg: cedulaConyuge,
+              conyuge: nombresConyuge,              
+              concesionario: null,
+              local: null,
+              asesor:null,
+              marca: marca,
+              modelo: modelo,
+              valor:valorVehiculo.toFixed(2),
+              entrada: entrada.toFixed(2),
+              porcentaje:porcEntrada.toFixed(2),
+              seg_desgravamen: seguroDesgravamen.toFixed(2),
+              seg_vehicular: seguroVehicular.toFixed(2),
+              fideicomiso: gtosLegales.toFixed(2),
+              dispositivo: dispositivo.toFixed(2),
+              monto_financiar: montoTotal.toFixed(2),
+              plazo: plazo,
+              score: score,
+              score_cyg:scoreConyuge,
+              decision: decisionFinal
+            })
+          })
+          .then(res => res.json())
+          .then(data => console.log('Datos guardados en Excel:', data))
+          .catch(err => console.error('Error al guardar en Excel:', err));
+        })
         .catch(err => console.error('Error al guardar análisis:', err));
 
           const doc = new jsPDF();
@@ -981,7 +1035,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             body: JSON.stringify({
               pdfBase64: pdfBase64,
               nombreArchivo: `${nombreRazonSocial}.pdf`,
-              destinatarios: ['jandrade@tactiqaec.com', 'pmantilla@tactiqaec.com']
+              destinatarios: ['jandrade@tactiqaec.com']
             })
           })
           .then(res => res.json())
@@ -990,6 +1044,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         })
         .catch(error => console.error('Error en la consulta:', error));
     });
+    
     function limpiarFormulario() {
     const inputs = document.querySelectorAll('#app-container input, #app-container select');
     inputs.forEach(input => {
