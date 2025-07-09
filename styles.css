@@ -8,6 +8,10 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  transform: scale(0.8);
+  transform-origin: top left;
+  width: 125%; /* compensar el escalado */
+  overflow-x: hidden;
 }
 
 h1 {
@@ -15,30 +19,6 @@ h1 {
   color: #333;
   margin-bottom: 20px;
 }
-
-/* .tipo-credito {
-  margin-bottom: 20px;
-  text-align: center;
-} */
-
-/* .tipo-credito label {
-  font-weight: bold;
-  color: #555;
-  margin-right: 10px;
-} */
-
-/* .tipo-credito select {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
-} */
-
-/* .tipo-credito select:focus {
-  border-color: #66afe9;
-  outline: none;
-  box-shadow: 0 0 5px rgba(102, 175, 233, 0.6);
-} */
 
 .contenedor {
   display: grid;
@@ -95,4 +75,18 @@ button {
 
 button:hover {
   background-color: #0d0035;
+}
+
+#logo {
+  text-align: center;
+  margin-bottom: 20px;
+  transition: all 0.5s ease;
+}
+
+.logo-sesion-activa {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin: 0;
+  text-align: left;
 }

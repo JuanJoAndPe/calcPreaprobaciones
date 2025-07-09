@@ -12,30 +12,22 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     const modelo = document.getElementById('modelo').value;
     const valorVehiculo = parseFloat(document.getElementById('valor').value);
     const entrada = parseFloat(document.getElementById('entrada').value);
-    const ingresoDeudor = document.getElementById('ingresoDeudor').value;
-    const plazo = document.getElementById('plazo').value;
-    const ingresoConyuge = document.getElementById('ingresoConyuge').value || 0;
+    const montoNum = valorVehiculo - entrada;
+    const ingresoDeudor = parseFloat(document.getElementById('ingresoDeudor').value);
+    const plazo = parseFloat(document.getElementById('plazo').value);
+    const ingresoConyuge = parseFloat(document.getElementById('ingresoConyuge').value) || 0;
     const cedulaDeudor = document.getElementById('cedulaDeudor').value;
-    const otrosIngresos = document.getElementById('otrosIngresos').value || 0;
+    const otrosIngresos = parseFloat(document.getElementById('otrosIngresos').value) || 0;
     const estadocivil = document.getElementById('estado_civil').value;
     const cedulaConyuge = document.getElementById('cedulaConyuge').value;
-    const hijos = document.getElementById('numerohijos').value || 0;
-    const activos = document.getElementById('Activos').value || 0;
+    const hijos = Math.trunc(parseFloat(document.getElementById('numerohijos').value)) || 0;
+    const activos = parseFloat(document.getElementById('Activos').value) || 0;
     const separacionBienes = document.querySelector('input[name="separacion"]:checked')?.value;
     const terminosAceptados = document.getElementById('terminos').checked;
     const regexCedula = /^\d{10}$/;
 
-    // Convertir los valores a números
-    const montoNum = parseFloat(valorVehiculo - entrada);
-    const ingresoDeudorNum = parseFloat(ingresoDeudor);
-    const plazoNum = parseInt(plazo);
-    const ingresoConyugeNum = parseFloat(ingresoConyuge) || 0;
-    const otrosIngresosNum = parseFloat(otrosIngresos) || 0;
-    const numeroHijos = Math.trunc(parseFloat(hijos)) || 0;
-    const activosNum = parseFloat(activos) || 0;
-
     // Validar que todos los campos estén llenos
-    if (!valor) {
+    if (!valorVehiculo) {
         window.alert("El campo 'Valor Vehículo' es obligatorio.");
         return;
     }
@@ -63,9 +55,9 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         window.alert("El campo 'Ingreso del Deudor' es obligatorio.");
         return;
     }
-    if (!hijos) {
-        window.alert("El campo 'Número de hijos' es obligatorio.");
-        return;
+    if (document.getElementById('numerohijos').value === '') {
+      window.alert("El campo 'Número de hijos' es obligatorio.");
+      return;
     }
     if (!terminosAceptados) {
         window.alert("Debe aceptar los términos y condiciones para continuar.");
@@ -87,22 +79,22 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         return;
     }
     // Validar que el ingreso del deudor no sea negativo
-    if (ingresoDeudorNum <= 0) {
+    if (ingresoDeudor <= 0) {
         window.alert("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
         return;
     }
     // Validar que el ingreso del cónyuge no sea negativo
-    if (ingresoConyugeNum < 0) {
+    if (ingresoConyuge < 0) {
         window.alert("El ingreso del cónyuge no puede ser negativo.");
         return;
     }
     // Validar que otros ingresos no sean negativos
-    if (otrosIngresosNum < 0) {
+    if (otrosIngresos < 0) {
         window.alert("Los otros ingresos no pueden ser negativos.");
         return;
     }
     // Validar que hijos no sean negativos
-    if (numeroHijos < 0) {
+    if (hijos < 0) {
         window.alert("Los hijos no pueden ser negativos.");
         return;
     }
@@ -118,8 +110,6 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     let ctaCorrientesConyuge;
     let deudaVigenteTotal;
     let cuotaTotal;
-    let valorDemandaJudicial = parseFloat(valorDemandaJudicial);
-    let valorCarteraCastigada = parseFloat(valorCarteraCastigada);
     let deudaVigenteConyuge = 0;
     let cuotaTotalConyuge = 0;
     let numOpActuales; 
@@ -128,8 +118,8 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     let demandaJudicial;
     let numOpActualesConyuge;
     let mesesSinVencimientosConyuge;
-    let carteraCastigadaConyuge= parseFloat(carteraCastigadaConyuge);;
-    let demandaJudicialConyuge = parseFloat(demandaJudicialConyuge);
+    let carteraCastigadaConyuge;
+    let demandaJudicialConyuge;
 
 
     // Crear un array de promesas para las solicitudes fetch
@@ -193,7 +183,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
       Promise.all(fetchPromises)
         .then(responses => Promise.all(responses.map(res => res.json())))
         .then(jsons => {
-        const [deudorData, conyugeData, datosDbook] = jsons;
+        const [deudorData, conyugeData] = jsons;
 
         console.log(deudorData);
         console.log(conyugeData);
@@ -221,7 +211,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         }
         if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
             ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
-            if(ctaCorrientes = undefined){
+            if(ctaCorrientes === null){
               ctaCorrientes = "No posee restricción"
             }
             console.log("Manejo Ctas Corrientes", ctaCorrientes);
@@ -270,7 +260,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           }
           if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
               ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
-              if(ctaCorrientesConyuge = undefined){
+              if(ctaCorrientesConyuge === null){
                 ctaCorrientesConyuge = "No posee restricción"
               }
               console.log("Manejo Ctas Corrientes Cónyuge", ctaCorrientesConyuge);
@@ -513,7 +503,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
 
         // Validación y cálculo de patrimonio
         let totalPasivos = deudaVigenteTotal + deudaVigenteConyuge;
-        let patrimonio = ((activosNum + valorVehiculo) - totalPasivos).toFixed(2);
+        let patrimonio = ((activos + valorVehiculo) - totalPasivos).toFixed(2);
         console.log("Patrimonio",patrimonio);
         console.log("Pasivos Totales", totalPasivos.toFixed(2));
 
@@ -543,11 +533,11 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         const montoTotal = montoNum + gtosLegales + dispositivo + seguroDesgravamen + seguroVehicular;
         
         // Cálculo de cuota final con seguros, gastos legales y dispositivo
-        const cuotaFinal = (montoTotal * interesMensual) / (1 - Math.pow(1 + interesMensual, -plazoNum));
+        const cuotaFinal = (montoTotal * interesMensual) / (1 - Math.pow(1 + interesMensual, -plazo));
 
  
         // Cálculo de ingresos y gastos totales
-        const ingresoBruto = ingresoDeudorNum + ingresoConyugeNum + otrosIngresosNum;
+        const ingresoBruto = ingresoDeudor + ingresoConyuge + otrosIngresos;
         // Cálculo de gastos familiares
         let gastosFamiliares;
         if(ingresoBruto <= 1500){
@@ -567,11 +557,11 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         // Cálculo del costo adicional por hijos
         let numHijos = 0;
         if(ingresoBruto <= 1500){
-          for (let i = 1; i <= numeroHijos; i++) {
+          for (let i = 1; i <= hijos; i++) {
             numHijos += 90;
           }
         } else {
-          for (let i = 1; i <= numeroHijos; i++) {
+          for (let i = 1; i <= hijos; i++) {
             numHijos += ingresoBruto * 0.05;
           }
         }
@@ -615,7 +605,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         // Crear el contenido HTML para mostrar los resultados
         const resultadosHTML = `
             <p><strong>Monto a Financiar:</strong> $${montoTotal.toFixed(2)}</p>
-            <p><strong>Plazo:</strong> ${plazoNum} meses</p>
+            <p><strong>Plazo:</strong> ${plazo} meses</p>
             <p><strong>Tasa:</strong> ${(0.1560 * 100).toFixed(2)}%</p>
             <p><strong>Cuota Mensual:</strong> $${cuotaFinal.toFixed(2)}</p>`;
 
@@ -650,7 +640,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           seguroVehicular: seguroVehicular.toFixed(2),
           montoFinanciar: montoTotal.toFixed(2),
           cuotaMensual: cuotaFinal.toFixed(2),
-          plazo: plazoNum,
+          plazo: plazo,
           indicadorEndeudamiento: indicadorEndeudamiento.toFixed(2),
           decisionFinal: decisionFinal,
           fecha: new Date()
@@ -905,7 +895,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           doc.setFont('helvetica', 'normal');
           doc.text('Plazo:', 20, y);
           doc.setFont('helvetica', 'bold');
-          doc.text(`${plazoNum} meses`, 80, y);
+          doc.text(`${plazo} meses`, 80, y);
 
           doc.setFont('helvetica', 'normal');
           doc.text('Modelo:', 110, y);
@@ -953,7 +943,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           doc.setFont('helvetica', 'normal');
           doc.text('Activos:', 110, y);
           doc.setFont('helvetica', 'bold');
-          doc.text(`$${activosNum.toFixed(2)}`, 160, y);
+          doc.text(`$${activos.toFixed(2)}`, 160, y);
           addLineBreak();
 
           doc.setFont('helvetica', 'normal');
