@@ -35,7 +35,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     }
 
 let errores = [];
-const camposAValidar = ['valor', 'plazo', 'cedulaDeudor', 'estado_civil', 'ingresoDeudor', 'numerohijos'];
+const camposAValidar = ['valor', 'plazo', 'cedulaDeudor', 'estado_civil', 'ingresoDeudor', 'numerohijos', 'terminos'];
 resetearEstilos(camposAValidar);
 
 if (!valorVehiculo) {
