@@ -27,77 +27,83 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     const regexCedula = /^\d{10}$/;
 
     // Validar que todos los campos estén llenos
-    if (!valorVehiculo) {
-        window.alert("El campo 'Valor Vehículo' es obligatorio.");
-        return;
+    function resetearEstilos(campos) {
+      campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.border = '';
+      });
     }
-    if (!plazo) {
-        window.alert("El campo 'Plazo' es obligatorio.");
-        return;
-    }
-    if (!cedulaDeudor) {
-        window.alert("El campo 'Cédula del Deudor' es obligatorio.");
-        return;
-    }
-    if (!estadocivil) {
-        window.alert("El campo 'Estado Civil' es obligatorio.");
-        return;
-    }
-    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes) {
-      window.alert("El campo 'Separación de Bienes' es obligatorio.");
-      return;
-    }
-    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !cedulaConyuge) {
-        window.alert("El campo 'Cédula del Cónyuge' es obligatorio para el estado civil seleccionado.");
-        return;
-    }
-    if (!ingresoDeudor) {
-        window.alert("El campo 'Ingreso del Deudor' es obligatorio.");
-        return;
-    }
-    if (document.getElementById('numerohijos').value === '') {
-      window.alert("El campo 'Número de hijos' es obligatorio.");
-      return;
-    }
-    if (!terminosAceptados) {
-        window.alert("Debe aceptar los términos y condiciones para continuar.");
-        return;
-    }
-    // Validar que el monto no esté vacío y sea mayor que 0
-    if (isNaN(montoNum) || montoNum <= 0) {
-        window.alert("El campo 'Monto' no puede estar vacío y debe ser mayor que 0.");
-        return;
-    }
-    // Validar que la cédula del deudor tenga 10 dígitos
-    if (!regexCedula.test(cedulaDeudor)) {
-        window.alert("La cédula del deudor debe tener exactamente 10 dígitos.");
-        return;
-    }
-    // Validar que la cédula del cónyuge tenga 10 dígitos si es requerida
-    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !regexCedula.test(cedulaConyuge)) {
-        window.alert("La cédula del cónyuge debe tener exactamente 10 dígitos.");
-        return;
-    }
-    // Validar que el ingreso del deudor no sea negativo
-    if (ingresoDeudor <= 0) {
-        window.alert("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
-        return;
-    }
-    // Validar que el ingreso del cónyuge no sea negativo
-    if (ingresoConyuge < 0) {
-        window.alert("El ingreso del cónyuge no puede ser negativo.");
-        return;
-    }
-    // Validar que otros ingresos no sean negativos
-    if (otrosIngresos < 0) {
-        window.alert("Los otros ingresos no pueden ser negativos.");
-        return;
-    }
-    // Validar que hijos no sean negativos
-    if (hijos < 0) {
-        window.alert("Los hijos no pueden ser negativos.");
-        return;
-    }
+
+let errores = [];
+const camposAValidar = ['valor', 'plazo', 'cedulaDeudor', 'estado_civil', 'ingresoDeudor', 'numerohijos'];
+resetearEstilos(camposAValidar);
+
+if (!valorVehiculo) {
+    errores.push("El campo 'Valor Vehículo' es obligatorio.");
+    document.getElementById('valor').style.border = '2px solid red';
+}
+if (!plazo) {
+    errores.push("El campo 'Plazo' es obligatorio.");
+    document.getElementById('plazo').style.border = '2px solid red';
+}
+if (!cedulaDeudor) {
+    errores.push("El campo 'Cédula del Deudor' es obligatorio.");
+    document.getElementById('cedulaDeudor').style.border = '2px solid red';
+}
+if (!estadocivil) {
+    errores.push("El campo 'Estado Civil' es obligatorio.");
+    document.getElementById('estado_civil').style.border = '2px solid red';
+}
+if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes) {
+    errores.push("El campo 'Separación de Bienes' es obligatorio.");
+}
+if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !cedulaConyuge) {
+    errores.push("El campo 'Cédula del Cónyuge' es obligatorio para el estado civil seleccionado.");
+    document.getElementById('cedulaConyuge').style.border = '2px solid red';
+}
+if (!ingresoDeudor) {
+    errores.push("El campo 'Ingreso del Deudor' es obligatorio.");
+    document.getElementById('ingresoDeudor').style.border = '2px solid red';
+}
+if (document.getElementById('numerohijos').value === '') {
+    errores.push("El campo 'Número de hijos' es obligatorio.");
+    document.getElementById('numerohijos').style.border = '2px solid red';
+}
+if (!terminosAceptados) {
+    errores.push("Debe aceptar los términos y condiciones para continuar.");
+}
+if (isNaN(montoNum) || montoNum <= 0) {
+    errores.push("El campo 'Monto' no puede estar vacío y debe ser mayor que 0.");
+}
+if (!regexCedula.test(cedulaDeudor)) {
+    errores.push("La cédula del deudor debe tener exactamente 10 dígitos.");
+    document.getElementById('cedulaDeudor').style.border = '2px solid red';
+}
+if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !regexCedula.test(cedulaConyuge)) {
+    errores.push("La cédula del cónyuge debe tener exactamente 10 dígitos.");
+    document.getElementById('cedulaConyuge').style.border = '2px solid red';
+}
+if (ingresoDeudor <= 0) {
+    errores.push("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
+    document.getElementById('ingresoDeudor').style.border = '2px solid red';
+}
+if (ingresoConyuge < 0) {
+    errores.push("El ingreso del cónyuge no puede ser negativo.");
+    document.getElementById('ingresoConyuge').style.border = '2px solid red';
+}
+if (otrosIngresos < 0) {
+    errores.push("Los otros ingresos no pueden ser negativos.");
+    document.getElementById('otrosIngresos').style.border = '2px solid red';
+}
+if (hijos < 0) {
+    errores.push("Los hijos no pueden ser negativos.");
+    document.getElementById('numerohijos').style.border = '2px solid red';
+}
+
+if (errores.length > 0) {
+    window.alert("Corrige los siguientes errores:\n\n" + errores.join('\n'));
+    return;
+}
 
     //Variables usadas en API y posterior
     let identificacionSujeto;
@@ -184,37 +190,26 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         .then(responses => Promise.all(responses.map(res => res.json())))
         .then(jsons => {
         const [deudorData, conyugeData] = jsons;
-
-        console.log(deudorData);
-        console.log(conyugeData);
         
         // Procesar datos del deudor principal
         if (deudorData.result && deudorData.result.identificacionTitular && deudorData.result.identificacionTitular.length > 0) {
             identificacionSujeto = deudorData.result.identificacionTitular[0].identificacionSujeto;
             nombreRazonSocial = deudorData.result.identificacionTitular[0].nombreRazonSocial;
-            console.log("Cédula deudor:", identificacionSujeto);
-            console.log("Nombres deudor:", nombreRazonSocial);
         }
         if(deudorData.result && deudorData.result.scoreFinanciero && deudorData.result.scoreFinanciero.length > 0){
             score = parseInt(deudorData.result.scoreFinanciero[0].score);
-            console.log("Score Deudor",score);
         }
         if(deudorData.result && deudorData.result.factoresScore && deudorData.result.factoresScore.length > 0){
           numOpActuales = parseInt(deudorData.result.factoresScore[0].valor);
           mesesSinVencimientos = parseInt(deudorData.result.factoresScore[2].valor);
           carteraCastigada = parseFloat(deudorData.result.factoresScore[9].valor);
           demandaJudicial= parseFloat(deudorData.result.factoresScore[8].valor);
-          console.log("Operaciones Actuales", numOpActuales);
-          console.log("Número de meses sin vencimientos", mesesSinVencimientos);
-          console.log("Cartera Castigada Deudor", carteraCastigada);
-          console.log("Demanda Judicial Deudor", demandaJudicial);
         }
         if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
             ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
-            if(ctaCorrientes === null){
+            if(ctaCorrientes === "undefined"){
               ctaCorrientes = "No posee restricción"
             }
-            console.log("Manejo Ctas Corrientes", ctaCorrientes);
         }
         if (deudorData.result && deudorData.result.deudaVigenteTotal) {
             deudaVigenteTotal = 0;
@@ -223,17 +218,13 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
                     deudaVigenteTotal += parseFloat(item.totalDeuda) || 0;
                 }
             });
-            console.log("Pasivos", deudaVigenteTotal);
         } else {
             deudaVigenteTotal = 0;
-            console.log("Pasivos", deudaVigenteTotal);
         }
         if (deudaVigenteTotal === 0) {
             cuotaTotal = 0;
-            console.log("Cuota Deudor", cuotaTotal);
         } else if (deudorData.result && deudorData.result.gastoFinanciero && deudorData.result.gastoFinanciero.length > 0) {
             cuotaTotal = parseFloat(deudorData.result.gastoFinanciero[0].cuotaEstimadaTitular) || 0;
-            console.log("Cuota Deudor", cuotaTotal);
         };
 
         // Procesar datos del cónyuge si existen
@@ -241,29 +232,21 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           if (conyugeData.result && conyugeData.result.identificacionTitular && conyugeData.result.identificacionTitular.length > 0) {
               identificacionConyuge = conyugeData.result.identificacionTitular[0].identificacionSujeto;
               nombresConyuge = conyugeData.result.identificacionTitular[0].nombreRazonSocial;
-              console.log("Cédula cónyuge:", identificacionConyuge);
-              console.log("Nombres cónyuge:", nombresConyuge);
           }
           if(conyugeData.result && conyugeData.result.scoreFinanciero && conyugeData.result.scoreFinanciero.length > 0){
               scoreConyuge = parseInt(conyugeData.result.scoreFinanciero[0].score);
-              console.log("Score Cónyuge",scoreConyuge);
           }
           if(conyugeData.result && conyugeData.result.factoresScore && conyugeData.result.factoresScore.length > 0){
               numOpActualesConyuge = parseInt(conyugeData.result.factoresScore[0].valor);
               mesesSinVencimientosConyuge = parseInt(conyugeData.result.factoresScore[2].valor);
               carteraCastigadaConyuge = parseFloat(conyugeData.result.factoresScore[9].valor);
               demandaJudicialConyuge= parseFloat(conyugeData.result.factoresScore[8].valor);
-              console.log("Operaciones Actuales Cónyuge", numOpActualesConyuge);
-              console.log("Número de meses sin vencimientos Cónyuge", mesesSinVencimientosConyuge);
-              console.log("Cartera Castigada Cónyuge", carteraCastigadaConyuge);
-              console.log("Demanda Judicial Cónyuge", demandaJudicialConyuge);
           }
           if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
               ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
-              if(ctaCorrientesConyuge === null){
+              if(ctaCorrientesConyuge === "undefined"){
                 ctaCorrientesConyuge = "No posee restricción"
               }
-              console.log("Manejo Ctas Corrientes Cónyuge", ctaCorrientesConyuge);
           }
           if (conyugeData.result && conyugeData.result.deudaVigenteTotal) {
               deudaVigenteConyuge = 0;
@@ -272,18 +255,14 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
                       deudaVigenteConyuge += parseFloat(item.totalDeuda) || 0;
                   }
               });
-              console.log("Pasivos Cónyuge", deudaVigenteConyuge);
           } else {
               deudaVigenteConyuge = 0;
-              console.log("Pasivos Cónyuge", deudaVigenteConyuge);
           }
     
           if (deudaVigenteConyuge === 0) {
             cuotaTotalConyuge = 0;
-            console.log("Cuota Cónyuge", cuotaTotalConyuge);
           } else if (conyugeData.result && conyugeData.result.gastoFinanciero && conyugeData.result.gastoFinanciero.length > 0) {
               cuotaTotalConyuge = parseFloat(conyugeData.result.gastoFinanciero[0].cuotaEstimadaTitular) || 0;
-              console.log("Cuota Cónyuge", cuotaTotalConyuge);
           }
           };
         
@@ -303,7 +282,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             }
           }
        
-        function obtenerDecisionFinal(score, numOpActuales, mesesSinVencimientos) {  
+        function obtenerDecisionFinal(score, numOpActuales, mesesSinVencimientos, carteraCastigada, demandaJudicial) {  
           let evaScore;
           if(score >=900){
             evaScore = "AAA"
@@ -337,9 +316,9 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             evaMesesSinVen = "A"
           } else if(mesesSinVencimientos <6){
             evaMesesSinVen = "Analista"
-          };
-
-          if (evaScore === "Rechazado") {
+          };       
+          
+          if (evaScore === "Rechazado" || carteraCastigada > 0 || demandaJudicial > 0) {
             return "Rechazado";
           };
 
@@ -355,8 +334,10 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             decisionFinal = "AA";
           } else if (promedio >= 0.5){
             decisionFinal = "A";
-          } else {
+          } else if(promedio < 0.5){
             decisionFinal = "Analista";
+          } else if (carteraCastigada > 0 || demandaJudicial > 0){
+            decisionFinal = "Rechazado"
           }
 
           return decisionFinal;
@@ -402,7 +383,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             evaMesesSinVenCyg = "Analista"
           };
 
-          if (evaScoreCyg === "Rechazado") {
+          if (evaScoreCyg === "Rechazado" || carteraCastigadaConyuge > 0 || demandaJudicialConyuge > 0) {
             return "Rechazado";
           };
 
@@ -418,8 +399,10 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             decisionFinalcyg = "AA";
           } else if (promediocyg >= 0.5){
             decisionFinalcyg = "A";
-          } else {
+          } else if (promediocyg < 0.5){
             decisionFinalcyg = "Analista";
+          } else if (carteraCastigadaConyuge > 0 || demandaJudicialConyuge > 0){
+            decisionFinal = "Rechazado"
           }
 
           return decisionFinalcyg;
@@ -470,10 +453,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
                 decisionScore = "RECHAZAR";
             }
         };
-        console.log("Calificación" ,evaluacionIntegral)
-        console.log("Calificación Cónyuge" ,evaIntegralConyuge)
-        console.log("Decision SCORE", decisionScore);
-        
+       
         //Validación Cartera Castigada
         let decisionCarteraCastigada;
         if (carteraCastigada > 0) {
@@ -485,7 +465,6 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         else {
             decisionCarteraCastigada = "OK";
         };
-        console.log("Decision Cartera Castigada", decisionCarteraCastigada);
 
         //Validación Demanda Judicial
         let decisionDemandaJudicial;
@@ -497,15 +476,11 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         } 
         else {
           decisionDemandaJudicial = "OK";
-        };
-        console.log("Decision Demanda Judicial", decisionDemandaJudicial);
-        
+        };      
 
         // Validación y cálculo de patrimonio
         let totalPasivos = deudaVigenteTotal + deudaVigenteConyuge;
         let patrimonio = ((activos + valorVehiculo) - totalPasivos).toFixed(2);
-        console.log("Patrimonio",patrimonio);
-        console.log("Pasivos Totales", totalPasivos.toFixed(2));
 
         //Monto a financiar
         document.getElementById('monto').value = montoNum.toFixed(2);
@@ -582,25 +557,24 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
         } else if((decisionScore == "ANALISTA" || decisionScore == "APROBADO") && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "RECHAZADO"){
           decisionFinal = "RECHAZADO"
         } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
-          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS"
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
         } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
-          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS  // JUSTIFICAR PATRIMONIO"
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES  // JUSTIFICAR PATRIMONIO ADICIONAL"
         } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
-          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS"
+          decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
         } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
           decisionFinal = "PRE - APROBADO ANALISTA"
         } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
-          decisionFinal = "PRE - APROBADO // JUSTIFICAR INGRESOS  // JUSTIFICAR PATRIMONIO"
+          decisionFinal = "PRE - APROBADO // JUSTIFICAR INGRESOS ADICIONALES // JUSTIFICAR PATRIMONIO ADICIONAL"
         } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento > 1){
-          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR PATRIMONIO"
+          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR PATRIMONIO ADICIONAL"
         } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
-          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR INGRESOS"
+          decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
         } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
           decisionFinal = "PRE - APROBADO"
         } else{
           decisionFinal = "RECHAZADO"
         }
-        console.log(decisionFinal);
 
         // Crear el contenido HTML para mostrar los resultados
         const resultadosHTML = `
@@ -1004,7 +978,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             doc.setTextColor(255, 0, 0);
           }
 
-          doc.text(`DECISIÓN FINAL: ${decisionFinal}`, 105, y, null, null, 'center');
+          doc.text(`${decisionFinal}`, 105, y, null, null, 'center');
           addLineBreak();
 
           // Restaurar color para texto informativo posterior
@@ -1161,7 +1135,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             doc1.setTextColor(255, 0, 0);
           }
 
-          doc1.text(`DECISIÓN FINAL: ${decisionFinal}`, 105, y1, null, null, 'center');
+          doc1.text(`${decisionFinal}`, 105, y1, null, null, 'center');
           addLineBreak1();
 
           // Restaurar color para texto informativo posterior
