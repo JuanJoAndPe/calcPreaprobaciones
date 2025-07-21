@@ -190,7 +190,8 @@ if (errores.length > 0) {
         .then(responses => Promise.all(responses.map(res => res.json())))
         .then(jsons => {
         const [deudorData, conyugeData] = jsons;
-        
+        console.log(deudorData);
+                
         // Procesar datos del deudor principal
         if (deudorData.result && deudorData.result.identificacionTitular && deudorData.result.identificacionTitular.length > 0) {
             identificacionSujeto = deudorData.result.identificacionTitular[0].identificacionSujeto;
@@ -207,7 +208,7 @@ if (errores.length > 0) {
         }
         if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
             ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
-            if(ctaCorrientes === "undefined"){
+            if(!ctaCorrientes || ctaCorrientes === "undefined"){
               ctaCorrientes = "No posee restricción"
             }
         }
@@ -244,7 +245,7 @@ if (errores.length > 0) {
           }
           if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
               ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
-              if(ctaCorrientesConyuge === "undefined"){
+              if(!ctaCorrientes || ctaCorrientes === "undefined"){
                 ctaCorrientesConyuge = "No posee restricción"
               }
           }
@@ -489,7 +490,7 @@ if (errores.length > 0) {
         document.getElementById('gastosFinancierosDeudor').value = cuotaTotal.toFixed(2);
         cuotaTotal = parseFloat(cuotaTotal);
 
-        //Cuota financiera deudor
+        //Cuota financiera cónyuge
         if(conyugeData){
           document.getElementById('gastosFinancierosConyuge').value = cuotaTotalConyuge.toFixed(2);
           cuotaTotalConyuge = parseFloat(cuotaTotalConyuge);
@@ -607,8 +608,8 @@ if (errores.length > 0) {
           gastos: gastosTotales,
           marca: marca,
           modelo: modelo,
-          valorVehiculo: valorVehiculo,
-          entrada: entrada,
+          valor: valorVehiculo.toFixed(2),
+          entrada: entrada.toFixed(2),
           gtosLegales: gtosLegales,
           dispositivo: dispositivo,
           seguroDesgravamen: seguroDesgravamen.toFixed(2),
@@ -656,7 +657,7 @@ if (errores.length > 0) {
               modelo: modelo,
               valor:valorVehiculo.toFixed(2),
               entrada: entrada.toFixed(2),
-              porcentaje:porcEntrada.toFixed(2),
+              porcentaje: porcEntrada.toFixed(2),
               seg_desgravamen: seguroDesgravamen.toFixed(2),
               seg_vehicular: seguroVehicular.toFixed(2),
               fideicomiso: gtosLegales.toFixed(2),
@@ -768,7 +769,7 @@ if (errores.length > 0) {
           doc.setFont('helvetica', 'normal');
           doc.text('Cuota estimada deudor:', 20, y);
           doc.setFont('helvetica', 'bold');
-          doc.text(`$${cuotaTotal.toFixed(2)}`, 70, y);
+          doc.text(`$${cuotaFinal.toFixed(2)}`, 70, y);
           addLineBreak(2);
 
           // DATOS DEL CÓNYUGE (si existen)
