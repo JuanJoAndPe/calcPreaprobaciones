@@ -291,9 +291,9 @@ if (errores.length > 0) {
             evaScore = "AA"
           } else if( score>=700){
             evaScore = "A"
-          } else if( score>=620){
+          } else if( score>=650){
             evaScore = "Analista"
-          } else if( score < 620){
+          } else if( score < 650){
             evaScore = "Rechazado"
           };
 
@@ -317,8 +317,8 @@ if (errores.length > 0) {
             evaMesesSinVen = "A"
           } else if(mesesSinVencimientos <6){
             evaMesesSinVen = "Analista"
-          };       
-          
+          };
+                    
           if (evaScore === "Rechazado" || carteraCastigada > 0 || demandaJudicial > 0) {
             return "Rechazado";
           };
@@ -356,9 +356,9 @@ if (errores.length > 0) {
             evaScoreCyg = "AA"
           } else if( scoreConyuge>=700){
             evaScoreCyg = "A"
-          } else if( scoreConyuge>=620){
+          } else if( scoreConyuge>=650){
             evaScoreCyg = "Analista"
-          } else if( scoreConyuge < 620){
+          } else if( scoreConyuge < 650){
             evaScoreCyg = "Rechazado"
           };
 
@@ -769,7 +769,7 @@ if (errores.length > 0) {
           doc.setFont('helvetica', 'normal');
           doc.text('Cuota estimada deudor:', 20, y);
           doc.setFont('helvetica', 'bold');
-          doc.text(`$${cuotaFinal.toFixed(2)}`, 70, y);
+          doc.text(`$${cuotaTotal.toFixed(2)}`, 70, y);
           addLineBreak(2);
 
           // DATOS DEL CÓNYUGE (si existen)
@@ -1162,7 +1162,7 @@ if (errores.length > 0) {
             body: JSON.stringify({
               pdfBase64: pdfBase64,
               nombreArchivo: `${nombreRazonSocial}.pdf`,
-              destinatarios: ['jandrade@tactiqaec.com', 'pmantilla@tactiqaec.com']
+              destinatarios: ['jandrade@tactiqaec.com', 'pmantilla@tactiqaec.com', 'jhidalgo@tactiqaec.com']
             })
           })
           .then(res => res.json())
