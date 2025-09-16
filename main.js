@@ -1193,7 +1193,7 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
             body: JSON.stringify({
               pdfBase64: pdfBase64,
               nombreArchivo: `${nombreRazonSocial}.pdf`,
-              destinatarios: "jandrade@tactiqaec.com, pmantilla@tactiqaec.com, jhidalgo@tactiqaec.com"
+              destinatarios: ["jandrade@tactiqaec.com", "pmantilla@tactiqaec.com", "jhidalgo@tactiqaec.com"]
             })
           })
           .then(res => res.json())
