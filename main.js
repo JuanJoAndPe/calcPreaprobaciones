@@ -208,7 +208,7 @@ if (errores.length > 0) {
         }
         if(deudorData.result && deudorData.result.manejoCuentasCorrientes && deudorData.result.manejoCuentasCorrientes.length > 0){
             ctaCorrientes = deudorData.result.manejoCuentasCorrientes[0].accionDescripcion
-            if(!ctaCorrientes || ctaCorrientes === "undefined"){
+            if(!ctaCorrientes || ctaCorrientes === undefined){
               ctaCorrientes = "No posee restricción"
             }
         }
@@ -245,7 +245,7 @@ if (errores.length > 0) {
           }
           if(conyugeData.result && conyugeData.result.manejoCuentasCorrientes && conyugeData.result.manejoCuentasCorrientes.length > 0){
               ctaCorrientesConyuge = conyugeData.result.manejoCuentasCorrientes[0].accionDescripcion
-              if(!ctaCorrientes || ctaCorrientes === "undefined"){
+              if(!ctaCorrientesConyuge || ctaCorrientesConyuge === undefined){
                 ctaCorrientesConyuge = "No posee restricción"
               }
           }
@@ -500,10 +500,10 @@ if (errores.length > 0) {
         const interesMensual = 0.1560 / 12;
 
         //Cálculo de cuota final a financiar
-        const gtosLegales = 700;
-        const dispositivo = 615; //dispositivo a 3 años
+        const gtosLegales = 850; //fideicomiso y extras o prenda y extras
+        const dispositivo = 675; //dispositivo a 1 año
         const seguroDesgravamen = montoNum * 0.021; //2.10% tasa referencial
-        const seguroVehicular = valorVehiculo * 0.0409; //4.09% tasa referencial
+        const seguroVehicular = valorVehiculo * 0.032; //3.20% tasa referencial
 
         // Cálculo de monto a financiar con seguros, gastos legales y dispositivo
         const montoTotal = montoNum + gtosLegales + dispositivo + seguroDesgravamen + seguroVehicular;
@@ -558,21 +558,31 @@ if (errores.length > 0) {
           decisionFinal = "RECHAZADO"
         } else if((decisionScore == "ANALISTA" || decisionScore == "APROBADO") && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "RECHAZADO"){
           decisionFinal = "RECHAZADO"
-        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1 >=0.80){
           decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
-        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento <0.80){
+          decisionFinal = "RECHAZADO // SIN CAPACIDAD DE PAGO"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1 >=0.80){
           decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES  // JUSTIFICAR PATRIMONIO ADICIONAL"
-        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento <0.80){
+          decisionFinal = "RECHAZADO // SIN CAPACIDAD DE PAGO // SIN PATRIMONIO"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1 >=0.80){
           decisionFinal = "ANALISTA CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
-        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento <0.80){
+          decisionFinal = "RECHAZADO // SIN CAPACIDAD DE PAGO"
+        } else if(decisionScore == "ANALISTA" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento >= 1){
           decisionFinal = "PRE - APROBADO ANALISTA"
-        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1){
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento < 1 >=0.80){
           decisionFinal = "PRE - APROBADO // JUSTIFICAR INGRESOS ADICIONALES // JUSTIFICAR PATRIMONIO ADICIONAL"
-        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento > 1){
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento <0.80){
+          decisionFinal = "RECHAZADO // SIN CAPACIDAD DE PAGO // SIN PATRIMONIO"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio < 0 && indicadorEndeudamiento >= 1){
           decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR PATRIMONIO ADICIONAL"
-        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1){
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento <0.80){
+          decisionFinal = "RECHAZADO // SIN CAPACIDAD DE PAGO"
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento < 1 >=0.80){
           decisionFinal = "PRE - APROBADO CONDICIONADO // JUSTIFICAR INGRESOS ADICIONALES"
-        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento > 1){
+        } else if(decisionScore == "APROBADO" && decisionCarteraCastigada == "OK" && decisionDemandaJudicial == "OK" && patrimonio > 0 && indicadorEndeudamiento >= 1){
           decisionFinal = "PRE - APROBADO"
         } else{
           decisionFinal = "RECHAZADO"
