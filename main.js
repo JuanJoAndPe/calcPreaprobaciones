@@ -34,76 +34,93 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
       });
     }
 
-let errores = [];
-const camposAValidar = ['valor', 'plazo', 'cedulaDeudor', 'estado_civil', 'ingresoDeudor', 'numerohijos', 'terminos'];
-resetearEstilos(camposAValidar);
+    let errores = [];
+    const camposAValidar = ['valor', 'plazo', 'cedulaDeudor', 'estado_civil', 'ingresoDeudor', 'numerohijos', 'terminos'];
+    resetearEstilos(camposAValidar);
 
-if (!valorVehiculo) {
-    errores.push("El campo 'Valor Vehículo' es obligatorio.");
-    document.getElementById('valor').style.border = '2px solid red';
-}
-if (!plazo) {
-    errores.push("El campo 'Plazo' es obligatorio.");
-    document.getElementById('plazo').style.border = '2px solid red';
-}
-if (!cedulaDeudor) {
-    errores.push("El campo 'Cédula del Deudor' es obligatorio.");
-    document.getElementById('cedulaDeudor').style.border = '2px solid red';
-}
-if (!estadocivil) {
-    errores.push("El campo 'Estado Civil' es obligatorio.");
-    document.getElementById('estado_civil').style.border = '2px solid red';
-}
-if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes) {
-    errores.push("El campo 'Separación de Bienes' es obligatorio.");
-}
-if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !cedulaConyuge) {
-    errores.push("El campo 'Cédula del Cónyuge' es obligatorio para el estado civil seleccionado.");
-    document.getElementById('cedulaConyuge').style.border = '2px solid red';
-}
-if (!ingresoDeudor) {
-    errores.push("El campo 'Ingreso del Deudor' es obligatorio.");
-    document.getElementById('ingresoDeudor').style.border = '2px solid red';
-}
-if (document.getElementById('numerohijos').value === '') {
-    errores.push("El campo 'Número de hijos' es obligatorio.");
-    document.getElementById('numerohijos').style.border = '2px solid red';
-}
-if (!terminosAceptados) {
-    errores.push("Debe aceptar los términos y condiciones para continuar.");
-}
-if (isNaN(montoNum) || montoNum <= 0) {
-    errores.push("El campo 'Monto' no puede estar vacío y debe ser mayor que 0.");
-}
-if (!regexCedula.test(cedulaDeudor)) {
-    errores.push("La cédula del deudor debe tener exactamente 10 dígitos.");
-    document.getElementById('cedulaDeudor').style.border = '2px solid red';
-}
-if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !regexCedula.test(cedulaConyuge)) {
-    errores.push("La cédula del cónyuge debe tener exactamente 10 dígitos.");
-    document.getElementById('cedulaConyuge').style.border = '2px solid red';
-}
-if (ingresoDeudor <= 0) {
-    errores.push("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
-    document.getElementById('ingresoDeudor').style.border = '2px solid red';
-}
-if (ingresoConyuge < 0) {
-    errores.push("El ingreso del cónyuge no puede ser negativo.");
-    document.getElementById('ingresoConyuge').style.border = '2px solid red';
-}
-if (otrosIngresos < 0) {
-    errores.push("Los otros ingresos no pueden ser negativos.");
-    document.getElementById('otrosIngresos').style.border = '2px solid red';
-}
-if (hijos < 0) {
-    errores.push("Los hijos no pueden ser negativos.");
-    document.getElementById('numerohijos').style.border = '2px solid red';
-}
+    if (!valorVehiculo) {
+        errores.push("El campo 'Valor Vehículo' es obligatorio.");
+        document.getElementById('valor').style.border = '2px solid red';
+    }
+    if (!plazo) {
+        errores.push("El campo 'Plazo' es obligatorio.");
+        document.getElementById('plazo').style.border = '2px solid red';
+    }
+    if (!cedulaDeudor) {
+        errores.push("El campo 'Cédula del Deudor' es obligatorio.");
+        document.getElementById('cedulaDeudor').style.border = '2px solid red';
+    }
+    if (!estadocivil) {
+        errores.push("El campo 'Estado Civil' es obligatorio.");
+        document.getElementById('estado_civil').style.border = '2px solid red';
+    }
 
-if (errores.length > 0) {
-    window.alert("Corrige los siguientes errores:\n\n" + errores.join('\n'));
-    return;
-}
+    // Validaciones de cónyuge SOLO si no hay separación de bienes
+    const requiereDatosConyuge = (estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes;
+
+    if ((estadocivil === "Casada/o" || estadocivil === "Unión Libre") && !separacionBienes && !separacionBienesSeleccionada) {
+        if (!separacionBienes) {
+            errores.push("El campo 'Separación de Bienes' es obligatorio.");
+        }
+    }
+
+    if (requiereDatosConyuge && !cedulaConyuge) {
+        errores.push("El campo 'Cédula del Cónyuge' es obligatorio para el estado civil seleccionado.");
+        document.getElementById('cedulaConyuge').style.border = '2px solid red';
+    }
+
+    if (!ingresoDeudor) {
+        errores.push("El campo 'Ingreso del Deudor' es obligatorio.");
+        document.getElementById('ingresoDeudor').style.border = '2px solid red';
+    }
+
+    if (document.getElementById('numerohijos').value === '') {
+        errores.push("El campo 'Número de hijos' es obligatorio.");
+        document.getElementById('numerohijos').style.border = '2px solid red';
+    }
+
+    if (!terminosAceptados) {
+        errores.push("Debe aceptar los términos y condiciones para continuar.");
+    }
+    if (isNaN(montoNum) || montoNum <= 0) {
+        errores.push("El campo 'Monto' no puede estar vacío y debe ser mayor que 0.");
+    }
+    if (!regexCedula.test(cedulaDeudor)) {
+        errores.push("La cédula del deudor debe tener exactamente 10 dígitos.");
+        document.getElementById('cedulaDeudor').style.border = '2px solid red';
+    }
+
+    // Validación del cónyuge SOLO si no hay separación de bienes
+    if (requiereDatosConyuge && !regexCedula.test(cedulaConyuge)) {
+        errores.push("La cédula del cónyuge debe tener exactamente 10 dígitos.");
+        document.getElementById('cedulaConyuge').style.border = '2px solid red';
+    }
+
+    // Ingresos
+    if (ingresoDeudor <= 0) {
+        errores.push("El ingreso del deudor no puede ser negativo y debe ser mayor que 0.");
+        document.getElementById('ingresoDeudor').style.border = '2px solid red';
+    }
+
+    if (requiereDatosConyuge && ingresoConyuge < 0) {
+        errores.push("El ingreso del cónyuge no puede ser negativo.");
+        document.getElementById('ingresoConyuge').style.border = '2px solid red';
+    }
+
+    if (otrosIngresos < 0) {
+        errores.push("Los otros ingresos no pueden ser negativos.");
+        document.getElementById('otrosIngresos').style.border = '2px solid red';
+    }
+    if (hijos < 0) {
+        errores.push("Los hijos no pueden ser negativos.");
+        document.getElementById('numerohijos').style.border = '2px solid red';
+    }
+
+    if (errores.length > 0) {
+        window.alert("Corrige los siguientes errores:\n\n" + errores.join('\n'));
+        return;
+    }
+
 
     //Variables usadas en API y posterior
     let identificacionSujeto;
@@ -1176,7 +1193,7 @@ if (errores.length > 0) {
             body: JSON.stringify({
               pdfBase64: pdfBase64,
               nombreArchivo: `${nombreRazonSocial}.pdf`,
-              destinatarios: ['jandrade@tactiqaec.com', 'pmantilla@tactiqaec.com', 'jhidalgo@tactiqaec.com']
+              destinatarios: "jandrade@tactiqaec.com, pmantilla@tactiqaec.com, jhidalgo@tactiqaec.com"
             })
           })
           .then(res => res.json())
