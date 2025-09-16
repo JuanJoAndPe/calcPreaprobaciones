@@ -211,6 +211,8 @@ if (errores.length > 0) {
             if(!ctaCorrientes || ctaCorrientes === undefined){
               ctaCorrientes = "No posee restricción"
             }
+        } else{
+            ctaCorrientes = "No posee restricción";
         }
         if (deudorData.result && deudorData.result.deudaVigenteTotal) {
             deudaVigenteTotal = 0;
@@ -248,6 +250,8 @@ if (errores.length > 0) {
               if(!ctaCorrientesConyuge || ctaCorrientesConyuge === undefined){
                 ctaCorrientesConyuge = "No posee restricción"
               }
+          } else {
+              ctaCorrientesConyuge = "No posee restricción";    
           }
           if (conyugeData.result && conyugeData.result.deudaVigenteTotal) {
               deudaVigenteConyuge = 0;
