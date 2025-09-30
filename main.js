@@ -6,6 +6,9 @@ function actualizarMonto() {
   }
 
 document.getElementById('calcularBtn').addEventListener('click', function () {
+    const bnt = document.getElementById('calcularBtn');
+    bnt.disabled = true;
+    bnt.innerText = "Procesando...";
      actualizarMonto();
     // Obtener los valores de los campos
     const marca = document.getElementById('marca').value;
@@ -1218,6 +1221,10 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
     document.getElementById('gastosFinancierosConyuge').value = '';
     document.getElementById('resultados').innerHTML = '';
     document.getElementById('decision').innerHTML = '';
+
+    const btn = document.getElementById('calcularBtn');
+    btn.disabled = false;
+    btn.innerText = "Calcular";
     }
 
     document.getElementById('new-query-btn').addEventListener('click', limpiarFormulario);
