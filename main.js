@@ -1182,25 +1182,58 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           doc1.setTextColor(150, 150, 150);
           doc1.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, pageHeight1 - 10, null, null, 'center');
 
-          // Guardar el PDF
-          const nombreDoc =`Precalificación ${nombreRazonSocial}.pdf`;
-          doc1.save(nombreDoc);
+          const doc2 = new jsPDF();
+          const pageHeight2 = doc2.internal.pageSize.height;
+          let y2 = 20;
+
+          doc2.setFont('helvetica', 'bold');
+          doc2.setFontSize(14);
+          doc2.text('RESPUESTA COMPLETA DE LA CONSULTA', 105, y2, null, null, 'center');
+          y2 += 10;
+
+          doc2.setFont('helvetica', 'normal');
+          doc2.setFontSize(9);
+
+          const jsonString = JSON.stringify({ deudorData, conyugeData }, null, 2);
+          const splitText = doc2.splitTextToSize(jsonString, 180);
+
+          splitText.forEach(line => {
+            if (y2 > pageHeight2 - 20) {
+              doc2.addPage();
+              y2 = 20;
+            }
+            doc2.text(line, 14, y2);
+            y2 += 5;
+          });
+
+          // // Guardar el PDF
+          // const nombreDoc =`Precalificación ${nombreRazonSocial}.pdf`;
+          // doc1.save(nombreDoc);
  
           // Enviar PDF al backend para envío por correo
 
           const pdfBase64 = doc.output('datauristring');
+          const pdfBase64Consulta = doc2.output('datauristring');
 
-          fetch('https://calcserver-3evg.onrender.com/enviarCorreo', {
+          ffetch('https://calcserver-3evg.onrender.com/enviarCorreo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              pdfBase64: pdfBase64,
-              nombreArchivo: `${nombreRazonSocial}.pdf`,
+              archivos: [
+                {
+                  pdfBase64: pdfBase64Resumen,
+                  nombreArchivo: `${nombreRazonSocial}.pdf`
+                },
+                {
+                  pdfBase64: pdfBase64Consulta,
+                  nombreArchivo: `ConsultaCompleta_${nombreRazonSocial}.pdf`
+                }
+              ],
               destinatarios: ["jandrade@tactiqaec.com", "pmantilla@tactiqaec.com", "jhidalgo@tactiqaec.com"]
             })
           })
           .then(res => res.json())
-          .then(data => console.log('Correo enviado:', data))
+          .then(data => console.log('Correo enviado con ambos PDFs:', data))
           .catch(err => console.error('Error al enviar correo:', err));
         })
         .catch(error => console.error('Error en la consulta:', error));
