@@ -1025,29 +1025,182 @@ document.getElementById('calcularBtn').addEventListener('click', function () {
           doc.setTextColor(150, 150, 150);
           doc.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, pageHeight - 10, null, null, 'center');
 
+          //RESUMEN OPERACIÓN CREDITICIA DESCARGA
+          const doc1 = new jsPDF();
+          const pageHeight1 = doc1.internal.pageSize.height;
+          let y1 = 20;
+
+          function addLineBreak1(lines1 = 1, lineHeight1 = 6) {
+            y1 += lines1 * lineHeight1;
+            if (y1 > pageHeight1 - 20) {
+              doc1.addPage();
+              y1 = 20;
+            }
+          }
+
+          // Estilo general
+          doc1.setFont('helvetica', );
+          doc1.setFontSize(12);
+
+          // Título
+          doc1.setFont('helvetica', 'bold');
+          doc1.setFontSize(16);
+          doc1.setTextColor(0, 0, 128);
+          doc1.text('RESUMEN DE PRECALIFICACIÓN', 105, y1, null, null, 'center');
+          addLineBreak1(2);
+
+          // DATOS DEL DEUDOR
+          doc1.setFont('helvetica', 'bold');
+          doc1.setFontSize(14);
+          doc1.setTextColor(0, 0, 128);
+          doc1.text('DATOS DEL DEUDOR', 14, y1);
+          addLineBreak1();
+
+          doc1.setFontSize(11);
+          doc1.setTextColor(0, 0, 0);
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Nombre:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${nombreRazonSocial}`, 70, y1);
+          addLineBreak1();
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Cédula:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${identificacionSujeto}`, 70, y1);
+          addLineBreak1();
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Score:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${score}`, 70, y1);
+          addLineBreak1();          
+
+          // DATOS DEL CÓNYUGE (si existen)
+          if (identificacionConyuge) {
+            doc1.setFontSize(14);
+            doc1.setTextColor(0, 0, 128);
+            doc1.text('DATOS DEL CÓNYUGE', 14, y1);
+            addLineBreak1();
+
+            doc1.setFontSize(11);
+            doc1.setTextColor(0, 0, 0);
+            doc1.setFont('helvetica', 'normal');
+            doc1.text('Nombre:', 20, y1);
+            doc1.setFont('helvetica', 'bold');
+            doc1.text(`${nombresConyuge}`, 70, y1);
+            addLineBreak1();
+
+            doc1.setFont('helvetica', 'normal');
+            doc1.text('Cédula:', 20, y1);
+            doc1.setFont('helvetica', 'bold');
+            doc1.text(`${identificacionConyuge}`, 70, y1);
+            addLineBreak1();
+
+            doc1.setFont('helvetica', 'normal');
+            doc1.text('Score:', 20, y1);
+            doc1.setFont('helvetica', 'bold');
+            doc1.text(`${scoreConyuge}`, 70, y1);
+            addLineBreak1();
+          }
+         
+          // RESUMEN DEL CRÉDITO CALCULADO
+          doc1.setFontSize(14);
+          doc1.setTextColor(0, 0, 128);
+          doc1.text('DETALLES DEL CRÉDITO', 14, y1);
+          doc1.text('DETALLES DE VEHÍCULO',104,y1);
+          addLineBreak1();
+
+          doc1.setFontSize(11);
+          doc1.setTextColor(0, 0, 0);
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Monto a financiar:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`$${montoTotal.toFixed(2)}`, 80, y1);
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Vehículo:', 110, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${marca}`, 160, y1);
+          addLineBreak1();
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Plazo:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${plazo} meses`, 80, y1);
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Modelo:', 110, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${modelo}`, 160, y1);
+          addLineBreak1();          
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Tasa de interés:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`${(0.1560 * 100).toFixed(2)}%`, 80, y1);
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Valor del Vehículo:', 110, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`$${valorVehiculo.toFixed(2)}`, 160, y1);
+          addLineBreak1();
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Cuota mensual estimada:', 20, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`$${cuotaFinal.toFixed(2)}`, 80, y1);
+
+          doc1.setFont('helvetica', 'normal');
+          doc1.text('Entrada:', 110, y1);
+          doc1.setFont('helvetica', 'bold');
+          doc1.text(`$${entrada.toFixed(2)}`, 160, y1);
+          addLineBreak1(2);
+
+
+          // DECISIÓN FINAL EN COLOR DESTACADO
+          doc1.setFontSize(14);
+          doc1.setFont('helvetica', 'bold');
+
+          if (decisionFinal.includes("APROBADO")) {
+            doc1.setTextColor(0, 128, 0);
+          } else if (decisionFinal.includes("ANALISTA")) {
+            doc1.setTextColor(255, 165, 0);
+          } else {
+            doc1.setTextColor(255, 0, 0);
+          }
+
+          doc1.text(`${decisionFinal}`, 105, y1, null, null, 'center');
+          addLineBreak1();
+
+          // Restaurar color para texto informativo posterior
+          doc1.setTextColor(0, 0, 0);
+
+          // Pie de página
+          doc1.setFontSize(8);
+          doc1.setTextColor(150, 150, 150);
+          doc1.text(`Generado el ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, 105, pageHeight1 - 10, null, null, 'center');
+
+          // Guardar el PDF
+          const nombreDoc =`Precalificación ${nombreRazonSocial}.pdf`;
+          doc1.save(nombreDoc);
+ 
           // Enviar PDF al backend para envío por correo
 
           const pdfBase64 = doc.output('datauristring');
-          
+
           fetch('https://calcserver-3evg.onrender.com/enviarCorreo', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              archivos: [
-                {
-                  pdfBase64: pdfBase64Resumen,
-                  nombreArchivo: `${nombreRazonSocial}.pdf`
-                },
-                {
-                  pdfBase64: pdfBase64Consulta,
-                  nombreArchivo: `ConsultaCompleta_${nombreRazonSocial}.pdf`
-                }
-              ],
+              pdfBase64: pdfBase64,
+              nombreArchivo: `${nombreRazonSocial}.pdf`,
               destinatarios: ["jandrade@tactiqaec.com", "pmantilla@tactiqaec.com", "jhidalgo@tactiqaec.com"]
             })
           })
           .then(res => res.json())
-          .then(data => console.log('Correo enviado con ambos PDFs:', data))
+          .then(data => console.log('Correo enviado:', data))
           .catch(err => console.error('Error al enviar correo:', err));
         })
         .catch(error => console.error('Error en la consulta:', error));
